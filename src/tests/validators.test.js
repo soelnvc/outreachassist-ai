@@ -1,0 +1,67 @@
+import { describe, it, expect } from 'vitest';
+import {
+  validateProspectInput,
+  sanitizeInput,
+  MAX_INPUT_LENGTH,
+} from '../utils/validators.js';
+
+describe('validateProspectInput', () => {
+  it('returns valid for sufficient prospect info', () => {
+    const result = validateProspectInput({
+      prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
+    });
+    expect(result).toEqual({ valid: true, error: null });
+  });
+
+  it('returns invalid when prospectInfo is empty', () => {
+    const result = validateProspectInput({ prospectInfo: '' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns invalid when prospectInfo is under 20 chars', () => {
+    const result = validateProspectInput({ prospectInfo: 'Too short' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns invalid when prospectInfo is only whitespace', () => {
+    const result = validateProspectInput({ prospectInfo: '              ' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns invalid when prospectInfo is missing entirely', () => {
+    const result = validateProspectInput({});
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+});
+
+describe('sanitizeInput', () => {
+  it('trims leading and trailing whitespace', () => {
+    const result = sanitizeInput('  hello world  ');
+    expect(result).toBe('hello world');
+  });
+
+  it('strips HTML angle brackets', () => {
+    const result = sanitizeInput('<script>alert("xss")</script>');
+    expect(result).toBe('scriptalert("xss")/script');
+  });
+
+  it('truncates input over MAX_INPUT_LENGTH', () => {
+    const longInput = 'a'.repeat(MAX_INPUT_LENGTH + 500);
+    const result = sanitizeInput(longInput);
+    expect(result.length).toBe(MAX_INPUT_LENGTH);
+  });
+
+  it('collapses multiple blank lines', () => {
+    const result = sanitizeInput('line one\n\n\n\n\nline two');
+    expect(result).toBe('line one\n\nline two');
+  });
+
+  it('handles combined sanitization operations', () => {
+    const result = sanitizeInput('  <b>hello</b>\n\n\n\nworld  ');
+    expect(result).toBe('bhello/b\n\nworld');
+  });
+});

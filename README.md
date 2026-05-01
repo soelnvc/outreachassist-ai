@@ -1,16 +1,41 @@
-# React + Vite
+# OutreachAI — Message Personalizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## What it does
+Generates hyper-personalized cold sales outreach messages using AI.
+Paste prospect info, select demographics, optionally add humour — get a message
+that sounds like a human wrote it for that specific person.
 
-Currently, two official plugins are available:
+## Features
+- Prospect info free text input
+- Demographic context selectors (gender, age, country, profession, marital status)
+- Humour toggle for meme-style opening hooks
+- Google Sheets logging of all generated messages
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run locally
+1. Clone the repo
+2. Run `npm install`
+3. Copy `.env.example` to `.env` and fill in your API keys
+4. Run `npm run dev`
 
-## React Compiler
+## Environment variables
+```
+VITE_GEMINI_API_KEY=        # Google AI Studio → API Keys
+VITE_GOOGLE_SHEETS_API_KEY= # Google Cloud Console → Credentials
+VITE_SHEET_ID=              # From your Google Sheet URL
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Google Sheets setup
+1. Create a new Google Sheet
+2. Add headers in row 1: Timestamp | Gender | Age Range | Country | Profession | Marital Status | Humour | Prospect Snippet | Generated Message
+3. Go to Google Cloud Console → Create a project → Enable Google Sheets API
+4. Go to Credentials → Create API Key → Restrict to Sheets API
+5. Copy the Sheet ID from the URL: docs.google.com/spreadsheets/d/[SHEET_ID]/edit
+6. Add VITE_GOOGLE_SHEETS_API_KEY and VITE_SHEET_ID to your .env file
 
-## Expanding the ESLint configuration
+## Run tests
+```
+npm run test
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech stack
+React 18 + Vite, Tailwind CSS, Google Gemini API, Google Sheets API v4, Vitest
