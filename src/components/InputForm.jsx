@@ -40,6 +40,25 @@ export function InputForm({ formData, onFieldChange, onSubmit, isLoading }) {
         />
       </div>
 
+      <div>
+        <label
+          htmlFor="outreach-intent"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Your outreach goal <span className="text-gray-400 font-normal">(optional)</span>
+        </label>
+        <textarea
+          id="outreach-intent"
+          name="outreach-intent"
+          rows={3}
+          value={formData.intent}
+          onChange={(e) => onFieldChange('intent', e.target.value)}
+          disabled={isLoading}
+          placeholder="What's the reason for reaching out? E.g., selling a product, recruiting, inviting to an event, networking..."
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      </div>
+
       <DemographicSelectors
         gender={formData.gender}
         ageRange={formData.ageRange}

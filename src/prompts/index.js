@@ -2,12 +2,25 @@ import { sanitizeInput } from '../utils/validators.js';
 
 const MIN_PROSPECT_LENGTH = 20;
 
+const BANNED_PHRASES = [
+  '"I hope this message finds you well"',
+  '"I came across your profile"',
+  '"I was impressed by"',
+  '"I\'d love to pick your brain"',
+  '"leverage"',
+  '"synergy"',
+  '"circle back"',
+  '"touch base"',
+  '"value proposition"',
+];
+
 /**
  * Builds a personalized cold outreach prompt from prospect data.
- * Includes optional demographic context and humour instruction.
+ * Includes optional demographic context, intent, and humour instruction.
  *
  * @param {Object} prospectData - The form data object
  * @param {string} prospectData.prospectInfo - Raw prospect information (required)
+ * @param {string} [prospectData.intent] - Optional outreach goal
  * @param {string|null} prospectData.gender - Selected gender or null
  * @param {string|null} prospectData.ageRange - Selected age range or null
  * @param {string|null} prospectData.country - Selected country or null
@@ -26,6 +39,11 @@ export function buildPersonalizerPrompt(prospectData) {
   }
 
   const sanitizedInfo = sanitizeInput(prospectData.prospectInfo);
+  const sanitizedIntent = prospectData.intent ? sanitizeInput(prospectData.intent) : '';
+
+  const intentBlock = sanitizedIntent
+    ? `\nYour reason for reaching out: ${sanitizedIntent}\n`
+    : '';
 
   const contextLines = [];
   if (prospectData.gender) {
@@ -46,25 +64,27 @@ export function buildPersonalizerPrompt(prospectData) {
 
   const contextBlock =
     contextLines.length > 0
-      ? `\nProspect context:\n${contextLines.join('\n')}\n`
+      ? `\nAdditional context about this person:\n${contextLines.join('\n')}\n`
       : '';
 
   const humourBlock = prospectData.humour
-    ? '\nOpen with one subtle, culturally relevant meme reference or witty hook. It must be self-aware and light — never forced, never cringe. The humour should make the prospect smile, not groan.\n'
+    ? `\nHUMOUR INSTRUCTION:\nBefore the main message, add ONE line that shows you're self-aware about cold-messaging. Examples of the TONE (do not copy these literally):\n- "This is technically a cold message, but I've read enough about your work that it feels weird calling it that."\n- "I promise this isn't another 'quick 15-min call' message. Okay, it kind of is. But hear me out."\n- "I spent way too long reading your profile before writing this, so at minimum I'm a dedicated cold-emailer."\nMake it specific to their situation. Never use a meme. Never reference internet culture. Just be a witty, self-aware human.\n`
     : '';
 
-  return `You are an expert sales copywriter. Write a personalised cold outreach message for the following prospect.
+  return `You are writing a short, personal message to someone you've looked into and genuinely want to reach out to. This is NOT a sales template. This is a real human writing to another real human.
 
-Prospect information:
+Here is everything you know about this person:
 """
 ${sanitizedInfo}
 """
-${contextBlock}
-The message must:
-- Feel genuinely human and personal — reference specific details from the prospect info
-- Be under 100 words
-- End with one clear, low-friction call to action
-- Never sound templated, robotic, or salesy
+${intentBlock}${contextBlock}
+WRITING RULES — follow these exactly:
+1. Start with something specific you noticed about THEM — not a generic opener like "I came across your profile." Pull a real detail from the info above.
+2. Keep it under 80 words. Shorter is better. Real messages are short.
+3. Write like you'd text a professional acquaintance — not like a LinkedIn bot. Use contractions. Use dashes. Be casual but respectful.
+4. ONE sentence about why you're reaching out. Don't oversell. Don't list benefits.
+5. End with a simple question — not a "call to action." Real people ask questions, they don't issue CTAs.
+6. DO NOT use any of these phrases: ${BANNED_PHRASES.join(', ')}
 ${humourBlock}
-Return only the final message. No subject line, no preamble, no explanation. Do not use any markdown formatting or bold text.`;
+Return ONLY the message. No subject line, no preamble, no explanation. No markdown. No bold. Just the raw message text.`;
 }

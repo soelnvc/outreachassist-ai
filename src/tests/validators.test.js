@@ -36,6 +36,30 @@ describe('validateProspectInput', () => {
     expect(result.valid).toBe(false);
     expect(result.error).toBeTruthy();
   });
+
+  it('returns valid when intent is not provided', () => {
+    const result = validateProspectInput({
+      prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
+    });
+    expect(result).toEqual({ valid: true, error: null });
+  });
+
+  it('returns invalid when intent is under 10 chars', () => {
+    const result = validateProspectInput({
+      prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
+      intent: 'short',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('10 characters');
+  });
+
+  it('returns valid when intent is sufficient', () => {
+    const result = validateProspectInput({
+      prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
+      intent: 'Selling our new AI analytics tool',
+    });
+    expect(result).toEqual({ valid: true, error: null });
+  });
 });
 
 describe('sanitizeInput', () => {

@@ -10,6 +10,7 @@ const SAMPLE_ROW_DATA = {
   profession: 'Head of Growth',
   maritalStatus: 'Single',
   humour: true,
+  intent: 'Selling CRM software',
   prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp specialising in B2B SaaS.',
   message: 'Hey Sarah, noticed your work at Acme Corp.',
 };
@@ -35,6 +36,7 @@ describe('appendToSheet', () => {
     const body = JSON.parse(options.body);
     expect(body.gender).toBe('Male');
     expect(body.humour).toBe('Yes');
+    expect(body.intent).toBe('Selling CRM software');
     expect(body.message).toContain('Sarah');
   });
 

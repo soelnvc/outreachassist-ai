@@ -19,9 +19,11 @@ export function sanitizeInput(input) {
 /**
  * Validates the prospect form data before API submission.
  * Checks that prospectInfo exists and meets the minimum length requirement.
+ * Also validates intent if provided.
  *
  * @param {Object} formData - The form data object
  * @param {string} formData.prospectInfo - Raw prospect information
+ * @param {string} [formData.intent] - Optional outreach intent
  * @returns {{ valid: boolean, error: string|null }} Validation result
  */
 export function validateProspectInput(formData) {
@@ -31,7 +33,16 @@ export function validateProspectInput(formData) {
       error: 'Please add a bit more about the prospect — at least a sentence.',
     };
   }
+
+  if (formData.intent && formData.intent.trim().length > 0 && formData.intent.trim().length < 10) {
+    return {
+      valid: false,
+      error: 'Please make your outreach goal a bit more specific (at least 10 characters).',
+    };
+  }
+
   return { valid: true, error: null };
 }
 
+export const MAX_INTENT_LENGTH = 500;
 export { MAX_INPUT_LENGTH, MIN_INPUT_LENGTH };

@@ -14,6 +14,7 @@ const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
  * @param {string|null} rowData.maritalStatus - Selected marital status or null
  * @param {boolean} rowData.humour - Whether humour was enabled
  * @param {string} rowData.prospectInfo - The original prospect info
+ * @param {string} [rowData.intent] - The outreach intent
  * @param {string} rowData.message - The generated message
  * @returns {Promise<void>}
  * @throws {Error} If the API call fails
@@ -31,6 +32,7 @@ export async function appendToSheet(rowData) {
     profession: rowData.profession ?? 'Not specified',
     maritalStatus: rowData.maritalStatus ?? 'Not specified',
     humour: rowData.humour ? 'Yes' : 'No',
+    intent: rowData.intent || 'Not specified',
     prospectSnippet: rowData.prospectInfo.slice(0, 100) + '...',
     message: rowData.message,
   };

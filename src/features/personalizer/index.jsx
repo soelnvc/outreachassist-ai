@@ -19,6 +19,7 @@ import { appendToSheet, getSheetUrl } from '../../services/sheets.js';
 export function PersonalizerPage() {
   const [formData, setFormData] = useState({
     prospectInfo: '',
+    intent: '',
     gender: null,
     ageRange: null,
     country: null,

@@ -54,9 +54,10 @@ describe('buildPersonalizerPrompt', () => {
       profession: null,
       maritalStatus: null,
       humour: true,
+      intent: null,
     });
-    expect(result).toContain('meme reference');
-    expect(result).toContain('witty hook');
+    expect(result).toContain('self-aware about cold-messaging');
+    expect(result).toContain('Never use a meme');
   });
 
   it('omits humour instruction when humour is false', () => {
@@ -68,8 +69,9 @@ describe('buildPersonalizerPrompt', () => {
       profession: null,
       maritalStatus: null,
       humour: false,
+      intent: null,
     });
-    expect(result).not.toContain('meme reference');
+    expect(result).not.toContain('self-aware about cold-messaging');
   });
 
   it('throws when prospectInfo is missing', () => {
@@ -82,6 +84,7 @@ describe('buildPersonalizerPrompt', () => {
         profession: null,
         maritalStatus: null,
         humour: false,
+        intent: null,
       }),
     ).toThrow();
   });
@@ -95,6 +98,7 @@ describe('buildPersonalizerPrompt', () => {
       profession: 'Head of Growth',
       maritalStatus: 'Single',
       humour: false,
+      intent: null,
     });
     expect(result).toContain('Gender: Female');
     expect(result).toContain('Age range: 26–35');
@@ -112,9 +116,53 @@ describe('buildPersonalizerPrompt', () => {
       profession: null,
       maritalStatus: null,
       humour: false,
+      intent: null,
     });
     expect(result).toContain(
-      'Return only the final message. No subject line, no preamble, no explanation.',
+      'Return ONLY the message. No subject line, no preamble, no explanation. No markdown. No bold.',
     );
+  });
+
+  it('includes intent block when intent is provided', () => {
+    const result = buildPersonalizerPrompt({
+      prospectInfo: VALID_PROSPECT_INFO,
+      gender: null,
+      ageRange: null,
+      country: null,
+      profession: null,
+      maritalStatus: null,
+      humour: false,
+      intent: 'Selling a new CRM platform',
+    });
+    expect(result).toContain('Your reason for reaching out: Selling a new CRM platform');
+  });
+
+  it('omits intent block when intent is null', () => {
+    const result = buildPersonalizerPrompt({
+      prospectInfo: VALID_PROSPECT_INFO,
+      gender: null,
+      ageRange: null,
+      country: null,
+      profession: null,
+      maritalStatus: null,
+      humour: false,
+      intent: null,
+    });
+    expect(result).not.toContain('Your reason for reaching out:');
+  });
+
+  it('includes banned phrases list in output', () => {
+    const result = buildPersonalizerPrompt({
+      prospectInfo: VALID_PROSPECT_INFO,
+      gender: null,
+      ageRange: null,
+      country: null,
+      profession: null,
+      maritalStatus: null,
+      humour: false,
+      intent: null,
+    });
+    expect(result).toContain('I hope this message finds you well');
+    expect(result).toContain('synergy');
   });
 });
