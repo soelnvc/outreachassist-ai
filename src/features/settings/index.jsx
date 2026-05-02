@@ -5,15 +5,17 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { getUserProfile, saveUserProfile } from '../../services/userProfile.js';
 import { Sidebar } from '../../components/Sidebar.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
+import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
 import { getSheetUrl } from '../../services/sheets.js';
-import { FiUser, FiClock, FiLink, FiExternalLink, FiChevronRight, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiClock, FiLink, FiLogOut, FiExternalLink, FiChevronRight, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 
 export function SettingsPage() {
   const { currentUser, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
   const sheetUrl = getSheetUrl();
 
@@ -80,6 +82,20 @@ export function SettingsPage() {
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       
+      <ConfirmationModal
+        isOpen={showSignOutConfirm}
+        onClose={() => setShowSignOutConfirm(false)}
+        onConfirm={() => {
+          signOut();
+          setShowSignOutConfirm(false);
+        }}
+        title="Sign Out?"
+        message="Are you sure you want to sign out of your OutreachAI account?"
+        confirmText="Yes, Sign Out"
+        confirmColor="bg-red-500 shadow-red-100"
+        icon={<FiLogOut className="text-4xl text-red-500" />}
+      />
+
       {/* Sidebar */}
       <Sidebar userProfile={profile} sheetUrl={sheetUrl} />
 
@@ -92,7 +108,7 @@ export function SettingsPage() {
             <div className="flex items-center gap-4">
               <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
               <button 
-                onClick={signOut}
+                onClick={() => setShowSignOutConfirm(true)}
                 className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
               >
                 <span className="relative z-10">Sign Out</span>

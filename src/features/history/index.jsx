@@ -8,7 +8,8 @@ import { Sidebar } from '../../components/Sidebar.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
 import { appendToSheet, getSheetUrl } from '../../services/sheets.js';
-import { FiCopy, FiCheck, FiSave, FiLoader, FiExternalLink, FiAlertCircle, FiTrash2 } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiSave, FiLoader, FiExternalLink, FiAlertCircle, FiTrash2, FiLogOut } from 'react-icons/fi';
+import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
 
 export function HistoryPage() {
   const { currentUser, signOut } = useAuth();
@@ -20,6 +21,7 @@ export function HistoryPage() {
   const [copiedId, setCopiedId] = useState(null);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const sheetUrl = getSheetUrl();
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export function HistoryPage() {
               <div className="flex items-center gap-4">
                 <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
                 <button 
-                  onClick={signOut}
+                  onClick={() => setShowSignOutConfirm(true)}
                   className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
                 >
                   <span className="relative z-10">Sign Out</span>
@@ -153,40 +155,31 @@ export function HistoryPage() {
         </header>
 
         {/* Clear History Confirmation Modal */}
-        <AnimatePresence>
-          {isConfirmingClear && (
-            <div className="fixed inset-0 z-[10000] bg-white/10 backdrop-blur-md flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-10 text-center border border-white shadow-2xl"
-              >
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FiAlertCircle className="text-4xl text-red-500" />
-                </div>
-                <h3 className="text-2xl font-bold font-heading text-gray-900 mb-2">Clear All History?</h3>
-                <p className="text-gray-600 font-light mb-8 leading-relaxed">
-                  This will permanently delete all your generated messages. This action cannot be undone.
-                </p>
-                <div className="flex flex-col gap-3">
-                  <button 
-                    onClick={handleClearAll}
-                    className="liquid-button bg-red-500 text-white px-8 py-3 rounded-full font-semibold shadow-lg shadow-red-200"
-                  >
-                    <span className="relative z-10">Yes, Clear Everything</span>
-                  </button>
-                  <button 
-                    onClick={() => setIsConfirmingClear(false)}
-                    className="px-8 py-3 rounded-full text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+        <ConfirmationModal
+          isOpen={isConfirmingClear}
+          onClose={() => setIsConfirmingClear(false)}
+          onConfirm={handleClearAll}
+          title="Clear All History?"
+          message="This will permanently delete all your generated messages. This action cannot be undone."
+          confirmText="Yes, Clear Everything"
+          confirmColor="bg-red-500 shadow-red-100"
+          icon={<FiTrash2 className="text-4xl text-red-500" />}
+        />
+
+        {/* Sign Out Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showSignOutConfirm}
+          onClose={() => setShowSignOutConfirm(false)}
+          onConfirm={() => {
+            signOut();
+            setShowSignOutConfirm(false);
+          }}
+          title="Sign Out?"
+          message="Are you sure you want to sign out of your OutreachAI account?"
+          confirmText="Yes, Sign Out"
+          confirmColor="bg-red-500 shadow-red-100"
+          icon={<FiLogOut className="text-4xl text-red-500" />}
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

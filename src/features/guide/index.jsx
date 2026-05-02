@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { 
   FiBook, 
   FiUser, 
@@ -11,16 +10,18 @@ import {
   FiExternalLink,
   FiArrowRight,
   FiZap,
-  FiShield
+  FiShield,
+  FiLogOut
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { Sidebar } from '../../components/Sidebar.jsx';
-import { SidebarFooter } from '../../components/Footer.jsx';
+import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
 import { getUserProfile } from '../../services/userProfile.js';
 
 export function GuidePage() {
   const { currentUser, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [activeSection, setActiveSection] = useState('overview');
   const [copied, setCopied] = useState(false);
 
@@ -106,7 +107,7 @@ export function GuidePage() {
 
         {/* Content Scroll Area */}
         <div className="flex-1 p-8 md:p-16 overflow-y-auto scroll-smooth custom-scrollbar">
-          <header className="mb-16">
+          <header className="mb-16 flex justify-between items-center">
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -116,7 +117,29 @@ export function GuidePage() {
                 Getting Started with <br /> <span className="bg-gradient-to-r from-[#F472B6] to-[#FDE047] bg-clip-text text-transparent italic">OutreachAI</span>
               </h2>
             </motion.div>
+            {currentUser && (
+              <button 
+                onClick={() => setShowSignOutConfirm(true)}
+                className="bg-white/50 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold px-5 py-2 rounded-full hover:bg-white transition-all"
+              >
+                Sign Out
+              </button>
+            )}
           </header>
+
+          <ConfirmationModal
+            isOpen={showSignOutConfirm}
+            onClose={() => setShowSignOutConfirm(false)}
+            onConfirm={() => {
+              signOut();
+              setShowSignOutConfirm(false);
+            }}
+            title="Sign Out?"
+            message="Are you sure you want to sign out of your OutreachAI account?"
+            confirmText="Yes, Sign Out"
+            confirmColor="bg-red-500 shadow-red-100"
+            icon={<FiLogOut className="text-4xl text-red-500" />}
+          />
 
           <div className="max-w-4xl space-y-24 pb-32">
             
@@ -233,7 +256,7 @@ export function GuidePage() {
                           onClick={handleCopyCode}
                           className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all text-white border border-white/20"
                         >
-                          {copied ? <FiCheck /> : <FiCopy />}
+                          {copied ? <FiCheckCircle /> : <FiCopy />}
                         </button>
                       </div>
                     </div>

@@ -16,6 +16,8 @@ import { AuthModal } from '../../components/AuthModal.jsx';
 import { saveHistory, updateHistorySavedStatus } from '../../services/history.js';
 import { getUserProfile } from '../../services/userProfile.js';
 import { AIDisclaimer } from '../../components/Footer.jsx';
+import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
+import { FiLogOut } from 'react-icons/fi';
 
 /**
  * PersonalizerPage — the main feature page that wires form input to prompt
@@ -26,6 +28,7 @@ export function PersonalizerPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [currentHistoryId, setCurrentHistoryId] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   
   useEffect(() => {
     async function loadProfile() {
@@ -150,7 +153,7 @@ export function PersonalizerPage() {
             <div className="flex items-center gap-4">
               <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
               <button 
-                onClick={signOut}
+                onClick={() => setShowSignOutConfirm(true)}
                 className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
               >
                 <span className="relative z-10">Sign Out</span>
@@ -165,6 +168,20 @@ export function PersonalizerPage() {
             </button>
           )}
         </header>
+
+        <ConfirmationModal
+          isOpen={showSignOutConfirm}
+          onClose={() => setShowSignOutConfirm(false)}
+          onConfirm={() => {
+            signOut();
+            setShowSignOutConfirm(false);
+          }}
+          title="Sign Out?"
+          message="Are you sure you want to sign out of your OutreachAI account?"
+          confirmText="Yes, Sign Out"
+          confirmColor="bg-red-500 shadow-red-100"
+          icon={<FiLogOut className="text-4xl text-red-500" />}
+        />
 
         {/* Content Wrapper with Framer Motion */}
         <motion.div
