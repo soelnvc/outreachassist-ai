@@ -19,15 +19,15 @@ const BANNED_PHRASES = [
  * and the logged-in user's profile data.
  * 
  * @param {Object} prospectData - The collected form data
- * @param {string} [prospectData.name] - Prospect name
- * @param {string} prospectData.prospectInfo - Raw prospect information (required)
- * @param {string} [prospectData.intent] - Optional outreach goal
- * @param {string|null} prospectData.gender - Selected gender or null
- * @param {string|null} prospectData.ageRange - Selected age range or null
- * @param {string|null} prospectData.country - Selected country or null
- * @param {string|null} prospectData.profession - Selected profession or null
- * @param {string|null} prospectData.maritalStatus - Selected marital status or null
- * @param {boolean} prospectData.humour - Whether to include humour instruction
+ * @param {string} [prospectData.name] - Prospect name & title
+ * @param {string} prospectData.prospectInfo - Company context / Recent news (required)
+ * @param {string} [prospectData.intent] - Value proposition / Ask
+ * @param {string|null} prospectData.outreachChannel - Selected outreach channel
+ * @param {string|null} prospectData.companySize - Selected company size
+ * @param {string|null} prospectData.tone - Selected tone
+ * @param {string|null} prospectData.industry - Selected industry
+ * @param {string|null} prospectData.buyerPersona - Selected buyer persona
+ * @param {boolean} prospectData.humour - Whether to include witty hook instruction
  * @param {Object} [userProfile] - The logged-in user's profile data
  * @returns {string} The formatted prompt
  */
@@ -43,60 +43,61 @@ export function buildPersonalizerPrompt(prospectData, userProfile) {
   const sanitizedIntent = prospectData.intent ? sanitizeInput(prospectData.intent) : '';
   const sanitizedName = prospectData.name ? sanitizeInput(prospectData.name) : '';
 
-  const nameBlock = sanitizedName ? `\nProspect Name: ${sanitizedName}\n` : '';
+  const nameBlock = sanitizedName ? `\nProspect Name & Title: ${sanitizedName}\n` : '';
   const intentBlock = sanitizedIntent
-    ? `\nYour reason for reaching out: ${sanitizedIntent}\n`
+    ? `\nValue Proposition & Ask: ${sanitizedIntent}\n`
     : '';
 
   const contextLines = [];
-  if (prospectData.gender) {
-    contextLines.push(`- Gender: ${prospectData.gender}`);
+  if (prospectData.outreachChannel) {
+    contextLines.push(`- Outreach Channel: ${prospectData.outreachChannel}`);
   }
-  if (prospectData.ageRange) {
-    contextLines.push(`- Age range: ${prospectData.ageRange}`);
+  if (prospectData.companySize) {
+    contextLines.push(`- Company Size: ${prospectData.companySize}`);
   }
-  if (prospectData.country) {
-    contextLines.push(`- Country: ${prospectData.country}`);
+  if (prospectData.industry) {
+    contextLines.push(`- Industry: ${prospectData.industry}`);
   }
-  if (prospectData.profession) {
-    contextLines.push(`- Profession: ${prospectData.profession}`);
+  if (prospectData.buyerPersona) {
+    contextLines.push(`- Buyer Persona: ${prospectData.buyerPersona}`);
   }
-  if (prospectData.maritalStatus) {
-    contextLines.push(`- Marital status: ${prospectData.maritalStatus}`);
-  }
+
+  const tone = prospectData.tone || 'Professional';
 
   const contextBlock =
     contextLines.length > 0
-      ? `\nAdditional context about this person:\n${contextLines.join('\n')}\n`
+      ? `\nFirmographics & Strategy:\n${contextLines.join('\n')}\n`
       : '';
 
   const humourBlock = prospectData.humour
-    ? `\nHUMOUR INSTRUCTION:\nBefore the main message, add ONE line that shows you're self-aware about cold-messaging. Examples of the TONE (do not copy these literally):\n- "This is technically a cold message, but I've read enough about your work that it feels weird calling it that."\n- "I promise this isn't another 'quick 15-min call' message. Okay, it kind of is. But hear me out."\n- "I spent way too long reading your profile before writing this, so at minimum I'm a dedicated cold-emailer."\nMake it specific to their situation. Never use a meme. Never reference internet culture. Just be a witty, self-aware human.\n`
+    ? `\nWITTY HOOK INSTRUCTION:\nAdd a brief, self-aware, or clever opening hook that breaks the ice. It should acknowledge the cold outreach nature but in a smart, non-cringey way. Example: "I know you probably get 100 pitches a day, so I'll skip the fluff." Make it specific to their industry if possible.\n`
     : '';
 
   let userProfileBlock = '';
-  if (userProfile && (userProfile.name || userProfile.work || userProfile.about)) {
-    userProfileBlock = `\nABOUT YOU (The Sender):\nUse the following information to find similarities with the prospect and briefly introduce yourself where natural. Keep your introduction minimal.\n`;
+  if (userProfile && (userProfile.name || userProfile.work || userProfile.about || userProfile.company)) {
+    userProfileBlock = `\nABOUT YOU (The Sender):\nUse the following information to establish credibility. Keep your introduction brief and relevant to the prospect's pain points.\n`;
     if (userProfile.name) userProfileBlock += `- Your Name: ${userProfile.name}\n`;
-    if (userProfile.work) userProfileBlock += `- Your Role/Profession: ${userProfile.work}\n`;
-    if (userProfile.about) userProfileBlock += `- About You: ${userProfile.about}\n`;
+    if (userProfile.company) userProfileBlock += `- Your Company Name: ${userProfile.company}\n`;
+    if (userProfile.work) userProfileBlock += `- Your Role/Title: ${userProfile.work}\n`;
+    if (userProfile.about) userProfileBlock += `- Your Value: ${userProfile.about}\n`;
   }
 
-  return `You are writing a short, personal message to someone you've looked into and genuinely want to reach out to. This is NOT a sales template. This is a real human writing to another real human.
+  return `You are an elite B2B Sales Copywriter and Strategist. Your goal is to write a highly converting, personalized cold outreach message. This message must cut through the noise, feel inherently human, and clearly articulate value.
 
-Here is everything you know about this person:
+Here is the context about the prospect and their company:
 """
 ${sanitizedInfo}
 """
 ${nameBlock}${intentBlock}${contextBlock}${userProfileBlock}
 WRITING RULES — follow these exactly:
-1. Start with something specific you noticed about THEM — not a generic opener like "I came across your profile." Pull a real detail from the info above.
-2. If the Prospect Name is provided, address them by their first name naturally in the message.
-3. Keep it under 80 words. Shorter is better. Real messages are short.
-4. Write like you'd text a professional acquaintance — not like a LinkedIn bot. Use contractions. Use dashes. Be casual but respectful.
-5. ONE sentence about why you're reaching out. Don't oversell. Don't list benefits.
-6. End with a simple question — not a "call to action." Real people ask questions, they don't issue CTAs.
-7. DO NOT use any of these phrases: ${BANNED_PHRASES.join(', ')}
+1. Tone: ${tone}. Adapt the language to fit this tone while remaining respectful.
+2. Hook: Start with a personalized trigger event or specific observation from the company context provided. NEVER use generic openers like "I came across your profile".
+3. Value Proposition: Tie their specific company context to the value proposition seamlessly. Don't just list features; focus on the business outcome or pain point resolution.
+4. Channel Optimization: Format the message appropriately for the selected Outreach Channel (e.g., shorter for LinkedIn, slightly more detailed but still concise for Cold Email).
+5. Brevity: Keep it under 100 words. B2B buyers are busy.
+6. Call to Action: End with a low-friction, interest-based CTA (e.g., "Open to learning more?" or "Worth a brief chat?") rather than asking for 15 minutes of their time.
+7. NO PLACEHOLDERS: Use the provided "Sender" information. NEVER use placeholders like "[Your Company]", "[My Company]", or "[Role]". If a detail is missing, simply don't mention it.
+8. DO NOT use any of these overused sales phrases: ${BANNED_PHRASES.join(', ')}
 ${humourBlock}
-Return ONLY the message. No subject line, no preamble, no explanation. No markdown. No bold. Just the raw message text.`;
+Return ONLY the message. No subject line (unless it's a Cold Email, then put "Subject: [Your Subject]" on the first line), no preamble, no explanation. Just the raw message text.`;
 }

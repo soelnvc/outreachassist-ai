@@ -20,8 +20,10 @@ export function SettingsPage() {
   const [profile, setProfile] = useState({
     name: '',
     about: '',
-    gender: '',
-    work: ''
+    company: '',
+    work: '',
+    sheetsUrl: '', // This is the Apps Script URL
+    viewUrl: ''    // This is the Spreadsheet Link
   });
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export function SettingsPage() {
   }, [currentUser]);
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!currentUser) return;
     
     setSaving(true);
@@ -82,18 +84,18 @@ export function SettingsPage() {
       <aside className="w-64 bg-[#E0D0F5]/40 backdrop-blur-md border-r border-white/50 flex flex-col justify-between hidden lg:flex sticky top-0 h-screen shadow-lg">
         <div className="p-8">
           <h1 className="text-2xl font-bold font-heading tracking-tight leading-tight text-gray-900 text-center uppercase">
-            OutreachAI <br /> Message <br /> Personalizer
+            OutreachAI <br /> Sales <br /> Copilot
           </h1>
           <p className="mt-4 text-[10px] text-center text-gray-600 leading-tight font-medium">
-            Generate hyper-personalised cold <br /> outreach messages in seconds.
+            AI-powered cold outreach <br /> for modern sales teams.
           </p>
         </div>
 
         <nav className="flex flex-col gap-10 items-center font-light font-subheading text-gray-700 text-base">
           <Link to="/" className="nav-link-underline pb-1 transition-colors">Workspace</Link>
           <Link to="/history" className="nav-link-underline pb-1 transition-colors">History</Link>
-          <a href={sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
-          <a href="#" className="nav-link-underline pb-1 transition-colors">How to Use</a>
+          <a href={profile.viewUrl || sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
+          <Link to="/guide" className="nav-link-underline pb-1 transition-colors">How to Use</Link>
           <Link to="/settings" className="nav-link-underline pb-1 transition-colors font-semibold">Settings</Link>
         </nav>
 
@@ -110,7 +112,7 @@ export function SettingsPage() {
               <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
               <button 
                 onClick={signOut}
-                className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-bold font-subheading px-5 py-2 rounded-full transition-all z-0"
+                className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
               >
                 <span className="relative z-10">Sign Out</span>
               </button>
@@ -141,7 +143,7 @@ export function SettingsPage() {
               <p className="text-gray-600 font-light max-w-md">Create a profile to personalize your generated messages with your own background and context.</p>
               <button 
                 onClick={() => setIsAuthModalOpen(true)}
-                className="liquid-button mt-4 bg-white/60 backdrop-blur-sm border border-white shadow-sm text-sm font-bold font-subheading px-8 py-3 rounded-full transition-all z-0"
+                className="liquid-button mt-4 bg-white/60 backdrop-blur-sm border border-white shadow-sm text-sm font-semibold font-subheading px-8 py-3 rounded-full transition-all z-0"
               >
                 <span className="relative z-10">Login Now</span>
               </button>
@@ -156,23 +158,23 @@ export function SettingsPage() {
                   <h3 className="text-xl font-bold font-heading text-gray-900">Your Profile</h3>
                 </div>
                 <p className="text-sm font-light text-gray-600 mb-8">
-                  This information helps the AI understand who you are. It will subtly introduce you and find similarities with your prospects for better connection rates.
+                  This information helps the AI craft messages on your behalf. It will establish your credibility and position your outreach naturally.
                 </p>
                 
                 <form onSubmit={handleSave} className="flex flex-col gap-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold font-subheading text-gray-800 uppercase tracking-wider pl-4">Your Name</label>
+                      <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4"> Your Name </label>
                       <input 
                         type="text" 
                         value={profile.name}
                         onChange={(e) => handleFieldChange('name', e.target.value)}
-                        placeholder="e.g. John Doe"
+                        placeholder="e.g. Sarah Mitchell"
                         className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold font-subheading text-gray-800 uppercase tracking-wider pl-4">Account Email</label>
+                      <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">Account Email</label>
                       <input 
                         type="email" 
                         value={currentUser.email}
@@ -184,37 +186,34 @@ export function SettingsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold font-subheading text-gray-800 uppercase tracking-wider pl-4">Your Profession / Title</label>
+                      <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">Your Role / Title</label>
                       <input 
                         type="text" 
                         value={profile.work}
                         onChange={(e) => handleFieldChange('work', e.target.value)}
-                        placeholder="e.g. Founder at TechCorp"
+                        placeholder="e.g. SDR at Acme Corp"
                         className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold font-subheading text-gray-800 uppercase tracking-wider pl-4">Your Gender</label>
-                      <select 
-                        value={profile.gender}
-                        onChange={(e) => handleFieldChange('gender', e.target.value)}
-                        className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 glass-input appearance-none"
-                      >
-                        <option value="">Select...</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
+                      <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">Company Name</label>
+                      <input 
+                        type="text" 
+                        value={profile.company || ''}
+                        onChange={(e) => handleFieldChange('company', e.target.value)}
+                        placeholder="e.g. Acme Corp"
+                        className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"
+                      />
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold font-subheading text-gray-800 uppercase tracking-wider pl-4">About You (Short Bio)</label>
+                    <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">What You Sell / Your Value Prop</label>
                     <textarea 
                       rows={3}
                       value={profile.about}
                       onChange={(e) => handleFieldChange('about', e.target.value)}
-                      placeholder="Briefly describe your background, interests, or what your company does. Keep it minimal."
+                      placeholder="e.g. We help B2B SaaS companies reduce churn by 40% through automated customer health scoring."
                       className="w-full rounded-2xl px-6 py-4 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input resize-none"
                     />
                   </div>
@@ -237,12 +236,62 @@ export function SettingsPage() {
                     <button 
                       type="submit"
                       disabled={saving}
-                      className="liquid-button bg-white/40 border border-white/60 shadow-sm text-sm font-bold font-subheading px-10 py-3 rounded-full transition-all z-0 disabled:opacity-50"
+                      className="liquid-button bg-white/40 border border-white/60 shadow-sm text-sm font-semibold font-subheading px-10 py-3 rounded-full transition-all z-0 disabled:opacity-50"
                     >
                       <span className="relative z-10">{saving ? 'Saving...' : 'Update Profile'}</span>
                     </button>
                   </div>
                 </form>
+              </motion.section>
+
+              {/* 2. Google Sheets Integration Section */}
+              <motion.section variants={itemVariants} className="glass-panel rounded-3xl p-8 border border-white/60 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <FiLink className="text-2xl text-[#A78BFA]" />
+                  <h3 className="text-xl font-bold font-heading text-gray-900">Google Sheets Integration</h3>
+                </div>
+                
+                <div className="flex flex-col gap-8">
+                  {/* Part 1: Spreadsheet Link */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">1. Spreadsheet Link (To View Data)</label>
+                    <input 
+                      type="text" 
+                      value={profile.viewUrl}
+                      onChange={(e) => handleFieldChange('viewUrl', e.target.value)}
+                      placeholder="https://docs.google.com/spreadsheets/d/..."
+                      className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 pl-4">
+                      The "Logs" button in the sidebar will open this link.
+                    </p>
+                  </div>
+
+                  {/* Part 2: Apps Script URL */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">2. Apps Script URL (To Save Data)</label>
+                    <input 
+                      type="text" 
+                      value={profile.sheetsUrl}
+                      onChange={(e) => handleFieldChange('sheetsUrl', e.target.value)}
+                      placeholder="https://script.google.com/macros/s/.../exec"
+                      className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 pl-4">
+                      The "Save" button uses this to send data to your sheet. Use the URL ending in <strong>/exec</strong>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-end pt-4 border-t border-white/40">
+                    <button 
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="liquid-button bg-white/40 border border-white/60 shadow-sm text-sm font-semibold font-subheading px-10 py-3 rounded-full transition-all z-0 disabled:opacity-50"
+                    >
+                      <span className="relative z-10">{saving ? 'Saving...' : 'Save Integration'}</span>
+                    </button>
+                  </div>
+                </div>
               </motion.section>
 
               {/* 2. History Section */}
@@ -299,31 +348,31 @@ export function SettingsPage() {
                     <FiChevronRight className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                   </motion.a>
                   
-                  <motion.a 
-                    href="#" 
+                  <motion.div 
+                    onClick={() => window.location.href = '/guide'}
                     whileHover={{ y: -4, backgroundColor: 'rgba(255, 255, 255, 0.5)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group"
+                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group cursor-pointer"
                   >
                     <div>
                       <h4 className="font-bold text-gray-800">Documentation</h4>
                       <p className="text-xs text-gray-500">How to use OutreachAI</p>
                     </div>
                     <FiChevronRight className="text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  </motion.a>
+                  </motion.div>
                   
-                  <motion.a 
-                    href="#" 
+                  <motion.div 
+                    onClick={() => window.location.href = '/privacy'}
                     whileHover={{ y: -4, backgroundColor: 'rgba(255, 255, 255, 0.5)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group"
+                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group cursor-pointer"
                   >
                     <div>
                       <h4 className="font-bold text-gray-800">Privacy Policy</h4>
                       <p className="text-xs text-gray-500">How we handle your data</p>
                     </div>
                     <FiChevronRight className="text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  </motion.a>
+                  </motion.div>
                 </div>
               </motion.section>
 

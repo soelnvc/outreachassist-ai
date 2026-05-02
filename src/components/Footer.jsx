@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 /**
  * Renders a professional product footer for the sidebar.
  * Includes copyright and legal links in small, thin grey text.
@@ -13,14 +15,13 @@ export function SidebarFooter() {
             © {currentYear} OutreachAI
           </p>
           <p className="text-[10px] text-gray-400 font-extralight">
-            Empowering human-first communication.
-          </p>
+            AI-powered sales outreach, human-first.</p>
         </div>
         
         <nav className="flex flex-col gap-2">
-          <a href="#" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
+          <Link to="/privacy" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
             Privacy Policy
-          </a>
+          </Link>
           <a href="#" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
             Terms of Service
           </a>

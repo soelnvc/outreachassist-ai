@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase.js';
 
 const HISTORY_COLLECTION = 'message_history';
@@ -6,11 +6,6 @@ const HISTORY_COLLECTION = 'message_history';
 /**
  * Saves a generated message and its input data to Firestore.
  * Adds createdAt and expireAt (30 days later) for TTL auto-deletion.
- * 
- * @param {string} userId - The Firebase UID of the logged-in user
- * @param {Object} formData - The inputs used to generate the message
- * @param {string} generatedMessage - The resulting message
- * @returns {Promise<string>} The ID of the created document
  */
 export async function saveHistory(userId, formData, generatedMessage) {
   if (!userId) throw new Error("User must be logged in to save history");
@@ -23,7 +18,8 @@ export async function saveHistory(userId, formData, generatedMessage) {
     formData,
     generatedMessage,
     createdAt: now,
-    expireAt: expireAt
+    expireAt: expireAt,
+    isSavedToLogs: false
   };
 
   try {
@@ -36,10 +32,20 @@ export async function saveHistory(userId, formData, generatedMessage) {
 }
 
 /**
+ * Updates the 'isSavedToLogs' status for a specific history item.
+ */
+export async function updateHistorySavedStatus(historyId, isSaved) {
+  try {
+    const docRef = doc(db, HISTORY_COLLECTION, historyId);
+    await updateDoc(docRef, { isSavedToLogs: isSaved });
+  } catch (error) {
+    console.error("Error updating history saved status: ", error);
+    throw error;
+  }
+}
+
+/**
  * Retrieves the history for a specific user, ordered by newest first.
- * 
- * @param {string} userId - The Firebase UID of the logged-in user
- * @returns {Promise<Array>} Array of history document objects
  */
 export async function getUserHistory(userId) {
   if (!userId) return [];

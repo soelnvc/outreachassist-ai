@@ -13,20 +13,18 @@ import { appendToSheet, getSheetUrl } from '../../services/sheets.js';
 import { SidebarFooter, AIDisclaimer } from '../../components/Footer.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
-import { saveHistory } from '../../services/history.js';
+import { saveHistory, updateHistorySavedStatus } from '../../services/history.js';
 import { getUserProfile } from '../../services/userProfile.js';
 
 /**
  * PersonalizerPage — the main feature page that wires form input to prompt
  * building, Gemini API calls, response parsing, and Google Sheets logging.
- * Owns all application state per Plan.md architecture.
- *
- * @returns {JSX.Element}
  */
 export function PersonalizerPage() {
   const { currentUser, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [currentHistoryId, setCurrentHistoryId] = useState(null);
   
   useEffect(() => {
     async function loadProfile() {
@@ -44,11 +42,11 @@ export function PersonalizerPage() {
     name: '',
     prospectInfo: '',
     intent: '',
-    gender: null,
-    ageRange: null,
-    country: null,
-    profession: null,
-    maritalStatus: null,
+    outreachChannel: null,
+    companySize: null,
+    tone: null,
+    industry: null,
+    buyerPersona: null,
     humour: false,
   });
 
@@ -73,10 +71,20 @@ export function PersonalizerPage() {
   const handleSave = useCallback(() => {
     if (!result?.message) return;
     setSheetStatus('saving');
-    appendToSheet({ ...formData, message: result.message })
-      .then(() => setSheetStatus('saved'))
+    appendToSheet({ ...formData, message: result.message }, userProfile?.sheetsUrl)
+      .then(async () => {
+        setSheetStatus('saved');
+        // Persist to Firestore if we have a history ID
+        if (currentHistoryId) {
+          try {
+            await updateHistorySavedStatus(currentHistoryId, true);
+          } catch (err) {
+            console.error("Failed to update history saved status:", err);
+          }
+        }
+      })
       .catch(() => setSheetStatus('error'));
-  }, [formData, result]);
+  }, [formData, result, currentHistoryId]);
 
   const handleSubmit = useCallback(async () => {
     const validation = validateProspectInput(formData);
@@ -93,6 +101,7 @@ export function PersonalizerPage() {
     setResult(null);
     setError(null);
     setSheetStatus(null);
+    setCurrentHistoryId(null);
     setIsLoading(true);
 
     try {
@@ -103,10 +112,13 @@ export function PersonalizerPage() {
       
       // Save to Firebase History if logged in
       if (currentUser && parsed?.message) {
-        saveHistory(currentUser.uid, formData, parsed.message).catch(err => {
-          console.error("Failed to save history:", err);
-          // Don't show error to user since generation succeeded
-        });
+        saveHistory(currentUser.uid, formData, parsed.message)
+          .then(id => {
+            setCurrentHistoryId(id);
+          })
+          .catch(err => {
+            console.error("Failed to save history:", err);
+          });
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -125,10 +137,10 @@ export function PersonalizerPage() {
         {/* Top: Logo Section */}
         <div className="p-8">
           <h1 className="text-2xl font-bold font-heading tracking-tight leading-tight text-gray-900 text-center uppercase">
-            OutreachAI <br /> Message <br /> Personalizer
+            OutreachAI <br /> Sales <br /> Copilot
           </h1>
           <p className="mt-4 text-[10px] text-center text-gray-600 leading-tight font-medium">
-            Generate hyper-personalised cold <br /> outreach messages in seconds.
+            AI-powered cold outreach <br /> for modern sales teams.
           </p>
         </div>
 
@@ -136,8 +148,8 @@ export function PersonalizerPage() {
         <nav className="flex flex-col gap-10 items-center font-light font-subheading text-gray-700 text-base">
           <Link to="/" className="nav-link-underline pb-1 transition-colors font-semibold">Workspace</Link>
           <Link to="/history" className="nav-link-underline pb-1 transition-colors">History</Link>
-          <a href={sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
-          <a href="#" className="nav-link-underline pb-1 transition-colors">How to Use</a>
+          <a href={userProfile?.viewUrl || sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
+          <Link to="/guide" className="nav-link-underline pb-1 transition-colors">How to Use</Link>
           <Link to="/settings" className="nav-link-underline pb-1 transition-colors">Settings</Link>
         </nav>
 
@@ -160,7 +172,7 @@ export function PersonalizerPage() {
               <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
               <button 
                 onClick={signOut}
-                className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-bold font-subheading px-5 py-2 rounded-full transition-all z-0"
+                className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
               >
                 <span className="relative z-10">Sign Out</span>
               </button>
@@ -168,7 +180,7 @@ export function PersonalizerPage() {
           ) : (
             <button 
               onClick={() => setIsAuthModalOpen(true)}
-              className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-bold font-subheading px-5 py-2 rounded-full transition-all z-0"
+              className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
             >
               <span className="relative z-10">Login / Sign UP</span>
             </button>
@@ -209,7 +221,7 @@ export function PersonalizerPage() {
                 onCopy={handleCopy}
                 onSave={handleSave}
                 sheetStatus={sheetStatus}
-                sheetUrl={sheetUrl}
+                sheetUrl={userProfile?.viewUrl || userProfile?.sheetsUrl || sheetUrl}
               />
             </motion.div>
           )}

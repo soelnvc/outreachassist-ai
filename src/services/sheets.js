@@ -7,45 +7,52 @@ const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
  * Non-blocking — call with .catch() to avoid breaking main flow.
  *
  * @param {Object} rowData - The data to log
- * @param {string|null} rowData.gender - Selected gender or null
- * @param {string|null} rowData.ageRange - Selected age range or null
- * @param {string|null} rowData.country - Selected country or null
- * @param {string|null} rowData.profession - Selected profession or null
- * @param {string|null} rowData.maritalStatus - Selected marital status or null
- * @param {boolean} rowData.humour - Whether humour was enabled
- * @param {string} rowData.prospectInfo - The original prospect info
- * @param {string} [rowData.intent] - The outreach intent
- * @param {string} rowData.message - The generated message
+ * @param {string|null} [customUrl] - User-specific Apps Script URL
  * @returns {Promise<void>}
- * @throws {Error} If the API call fails
  */
-export async function appendToSheet(rowData) {
-  if (!APPS_SCRIPT_URL) {
-    throw new Error('Google Apps Script URL is not configured. Check your .env file.');
+export async function appendToSheet(rowData, customUrl) {
+  const targetUrl = customUrl || APPS_SCRIPT_URL;
+
+  if (!targetUrl || targetUrl.trim() === '') {
+    console.error('Sheets Error: No target URL provided.');
+    throw new Error('Google Apps Script URL is not configured in Settings.');
   }
+
+  // Safety check for prospectInfo
+  const prospectRaw = rowData.prospectInfo || rowData.prospectSnippet || '';
+  const prospectSnippet = prospectRaw.length > 100 
+    ? prospectRaw.slice(0, 100) + '...' 
+    : prospectRaw;
 
   const payload = {
     timestamp: new Date().toISOString(),
-    gender: rowData.gender ?? 'Not specified',
-    ageRange: rowData.ageRange ?? 'Not specified',
-    country: rowData.country ?? 'Not specified',
-    profession: rowData.profession ?? 'Not specified',
-    maritalStatus: rowData.maritalStatus ?? 'Not specified',
+    outreachChannel: rowData.outreachChannel ?? 'Not specified',
+    companySize: rowData.companySize ?? 'Not specified',
+    industry: rowData.industry ?? 'Not specified',
+    buyerPersona: rowData.buyerPersona ?? 'Not specified',
+    tone: rowData.tone ?? 'Professional',
     humour: rowData.humour ? 'Yes' : 'No',
     intent: rowData.intent || 'Not specified',
-    name: rowData.name || 'Not specified',
-    prospectSnippet: rowData.prospectInfo.slice(0, 100) + '...',
+    name: rowData.name || rowData.prospectName || 'Not specified',
+    prospectSnippet: prospectSnippet,
     message: rowData.message,
   };
 
-  const response = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // Using text/plain to avoid CORS preflight issues with GAS
+      body: JSON.stringify(payload),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Sheets API error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Sheets Service Error:', error);
+    throw error;
   }
 }
 
