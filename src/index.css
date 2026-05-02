@@ -1,4 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:slnt,wght@0,100..900;1,100..900&display=swap');
 @import 'tailwindcss';
+
+@theme {
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-subheading: 'Graphik', 'Inter', system-ui, sans-serif;
+}
+
+.nav-link-underline {
+  @apply relative inline-block;
+}
+
+.nav-link-underline::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-full h-[1px] bg-gray-900 scale-x-0 origin-left transition-transform duration-300 ease-out;
+}
+
+.nav-link-underline:hover::after {
+  @apply scale-x-100;
+}
+
+/* Smooth placeholder transition */
+::placeholder {
+  @apply font-light transition-opacity duration-300 ease-out;
+}
+
+:focus::placeholder {
+  @apply opacity-0;
+}
+
+.liquid-button {
+  @apply relative overflow-hidden transition-all duration-500 ease-in-out;
+}
+
+.liquid-button::before {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[#E9D9FA] to-[#F1C5F0] -translate-x-full transition-transform duration-700 ease-in-out -z-10;
+  border-radius: inherit;
+}
+
+.liquid-button:hover::before {
+  @apply translate-x-0;
+}
 
 .sr-only {
   position: absolute;
@@ -15,4 +57,13 @@
 :focus-visible {
   outline: 2px solid #534AB7;
   outline-offset: 2px;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  @apply bg-white/40 backdrop-blur-md border border-white/60 shadow-[0_4px_30px_rgba(0,0,0,0.05)];
+}
+
+.glass-input {
+  @apply bg-white/60 backdrop-blur-md border border-white/80 shadow-[0_2px_10px_rgba(255,255,255,0.4)] focus:outline-hidden focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all;
 }

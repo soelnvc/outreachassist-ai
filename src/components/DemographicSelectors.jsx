@@ -1,7 +1,7 @@
-const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
-const AGE_RANGE_OPTIONS = ['18–25', '26–35', '36–45', '45+'];
-const MARITAL_STATUS_OPTIONS = ['Single', 'Married', 'Parent', 'Skip'];
-const COUNTRY_OPTIONS = [
+export const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+export const AGE_RANGE_OPTIONS = ['18–25', '26–35', '36–45', '45+'];
+export const MARITAL_STATUS_OPTIONS = ['Single', 'Married', 'Parent', 'Skip'];
+export const COUNTRY_OPTIONS = [
   'United States',
   'India',
   'United Kingdom',
@@ -9,7 +9,7 @@ const COUNTRY_OPTIONS = [
   'Singapore',
   'Other',
 ];
-const PROFESSION_OPTIONS = [
+export const PROFESSION_OPTIONS = [
   'Founder/CEO',
   'Head of Growth',
   'Sales Leader',
@@ -113,22 +113,27 @@ export function DemographicSelectors({
  * @param {boolean} [props.optional=false] - Whether to show "(optional)" hint
  * @returns {JSX.Element}
  */
-function ChipGroup({ label, name, options, selected, onChange, optional = false }) {
+import { motion } from 'framer-motion';
+
+export function ChipGroup({ label, name, options, selected, onChange, optional = false }) {
   const legendId = `${name}-label`;
 
   return (
-    <fieldset>
-      <legend id={legendId} className="block text-sm font-medium text-gray-700 mb-2">
-        {label} {optional && <span className="text-gray-400">(optional)</span>}
-      </legend>
-      <div role="group" aria-labelledby={legendId} className="flex flex-wrap gap-2">
+    <div className="w-full h-full flex flex-col justify-center items-center gap-4">
+      <div id={legendId} className="text-sm font-light font-subheading text-gray-800 text-center uppercase tracking-wider">
+        {label}
+      </div>
+      <div role="group" aria-labelledby={legendId} className="flex flex-wrap justify-center gap-2">
         {options.map((option) => (
-          <label
+          <motion.label
             key={option}
-            className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer border transition-colors ${
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+            className={`inline-flex items-center px-4 py-2 rounded-full text-xs font-light font-subheading cursor-pointer border transition-colors duration-500 ${
               selected === option
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400'
+                ? 'bg-gradient-to-r from-[#E9D9FA] to-[#F1C5F0] text-gray-900 border-white shadow-sm ring-1 ring-white/20'
+                : 'bg-white/40 text-gray-700 border-white/60 hover:bg-white/60'
             }`}
           >
             <input
@@ -139,10 +144,17 @@ function ChipGroup({ label, name, options, selected, onChange, optional = false 
               onChange={() => onChange(option)}
               className="sr-only"
             />
-            {option}
-          </label>
+            <motion.span
+              animate={{
+                fontWeight: selected === option ? 600 : 300,
+              }}
+              transition={{ duration: 0.5 }}
+            >
+              {option}
+            </motion.span>
+          </motion.label>
         ))}
       </div>
-    </fieldset>
+    </div>
   );
 }

@@ -19,6 +19,7 @@ const BANNED_PHRASES = [
  * Includes optional demographic context, intent, and humour instruction.
  *
  * @param {Object} prospectData - The form data object
+ * @param {string} [prospectData.name] - Prospect name
  * @param {string} prospectData.prospectInfo - Raw prospect information (required)
  * @param {string} [prospectData.intent] - Optional outreach goal
  * @param {string|null} prospectData.gender - Selected gender or null
@@ -40,7 +41,9 @@ export function buildPersonalizerPrompt(prospectData) {
 
   const sanitizedInfo = sanitizeInput(prospectData.prospectInfo);
   const sanitizedIntent = prospectData.intent ? sanitizeInput(prospectData.intent) : '';
+  const sanitizedName = prospectData.name ? sanitizeInput(prospectData.name) : '';
 
+  const nameBlock = sanitizedName ? `\nProspect Name: ${sanitizedName}\n` : '';
   const intentBlock = sanitizedIntent
     ? `\nYour reason for reaching out: ${sanitizedIntent}\n`
     : '';
@@ -77,14 +80,15 @@ Here is everything you know about this person:
 """
 ${sanitizedInfo}
 """
-${intentBlock}${contextBlock}
+${nameBlock}${intentBlock}${contextBlock}
 WRITING RULES — follow these exactly:
 1. Start with something specific you noticed about THEM — not a generic opener like "I came across your profile." Pull a real detail from the info above.
-2. Keep it under 80 words. Shorter is better. Real messages are short.
-3. Write like you'd text a professional acquaintance — not like a LinkedIn bot. Use contractions. Use dashes. Be casual but respectful.
-4. ONE sentence about why you're reaching out. Don't oversell. Don't list benefits.
-5. End with a simple question — not a "call to action." Real people ask questions, they don't issue CTAs.
-6. DO NOT use any of these phrases: ${BANNED_PHRASES.join(', ')}
+2. If the Prospect Name is provided, address them by their first name naturally in the message.
+3. Keep it under 80 words. Shorter is better. Real messages are short.
+4. Write like you'd text a professional acquaintance — not like a LinkedIn bot. Use contractions. Use dashes. Be casual but respectful.
+5. ONE sentence about why you're reaching out. Don't oversell. Don't list benefits.
+6. End with a simple question — not a "call to action." Real people ask questions, they don't issue CTAs.
+7. DO NOT use any of these phrases: ${BANNED_PHRASES.join(', ')}
 ${humourBlock}
 Return ONLY the message. No subject line, no preamble, no explanation. No markdown. No bold. Just the raw message text.`;
 }

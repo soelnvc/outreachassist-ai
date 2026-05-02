@@ -33,6 +33,7 @@ export async function appendToSheet(rowData) {
     maritalStatus: rowData.maritalStatus ?? 'Not specified',
     humour: rowData.humour ? 'Yes' : 'No',
     intent: rowData.intent || 'Not specified',
+    name: rowData.name || 'Not specified',
     prospectSnippet: rowData.prospectInfo.slice(0, 100) + '...',
     message: rowData.message,
   };

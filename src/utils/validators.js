@@ -16,17 +16,29 @@ export function sanitizeInput(input) {
     .replace(/\n{3,}/g, '\n\n');
 }
 
+export const MAX_NAME_LENGTH = 100;
+export const MAX_INTENT_LENGTH = 500;
+export { MAX_INPUT_LENGTH, MIN_INPUT_LENGTH };
+
 /**
  * Validates the prospect form data before API submission.
  * Checks that prospectInfo exists and meets the minimum length requirement.
- * Also validates intent if provided.
+ * Also validates name and intent if provided.
  *
  * @param {Object} formData - The form data object
  * @param {string} formData.prospectInfo - Raw prospect information
+ * @param {string} [formData.name] - Optional prospect name
  * @param {string} [formData.intent] - Optional outreach intent
  * @returns {{ valid: boolean, error: string|null }} Validation result
  */
 export function validateProspectInput(formData) {
+  if (formData.name && formData.name.trim().length > 0 && formData.name.trim().length < 2) {
+    return {
+      valid: false,
+      error: 'Please enter a valid name (at least 2 characters).',
+    };
+  }
+
   if (!formData.prospectInfo || formData.prospectInfo.trim().length < MIN_INPUT_LENGTH) {
     return {
       valid: false,
@@ -43,6 +55,3 @@ export function validateProspectInput(formData) {
 
   return { valid: true, error: null };
 }
-
-export const MAX_INTENT_LENGTH = 500;
-export { MAX_INPUT_LENGTH, MIN_INPUT_LENGTH };

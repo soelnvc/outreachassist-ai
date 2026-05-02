@@ -165,4 +165,20 @@ describe('buildPersonalizerPrompt', () => {
     expect(result).toContain('I hope this message finds you well');
     expect(result).toContain('synergy');
   });
+
+  it('includes prospect name in output prompt when provided', () => {
+    const result = buildPersonalizerPrompt({
+      name: 'Sarah Chen',
+      prospectInfo: VALID_PROSPECT_INFO,
+      gender: null,
+      ageRange: null,
+      country: null,
+      profession: null,
+      maritalStatus: null,
+      humour: false,
+      intent: null,
+    });
+    expect(result).toContain('Prospect Name: Sarah Chen');
+    expect(result).toContain('address them by their first name');
+  });
 });

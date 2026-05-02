@@ -7,33 +7,69 @@
  * @param {Function} props.onToggle - Callback to toggle humour on/off
  * @returns {JSX.Element}
  */
+import { motion, AnimatePresence } from 'framer-motion';
+
 export function HumourToggle({ humour, onToggle }) {
   return (
-    <div className="flex items-center gap-3 py-2">
-      <label
-        htmlFor="humour-toggle"
-        className="text-sm font-medium text-gray-700 cursor-pointer select-none"
-      >
-        Add a witty opening hook
-      </label>
-      <button
-        id="humour-toggle"
-        type="button"
-        role="switch"
-        aria-checked={humour}
-        aria-label="Toggle humour mode"
-        onClick={onToggle}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          humour ? 'bg-indigo-600' : 'bg-gray-300'
+    <motion.button
+      id="humour-toggle"
+      type="button"
+      role="switch"
+      aria-checked={humour}
+      aria-label="Toggle witty hook"
+      onClick={onToggle}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={`relative w-full rounded-full h-[52px] flex items-center justify-between px-2 transition-colors duration-500 overflow-hidden border ${
+        humour
+          ? 'border-white ring-2 ring-white/20'
+          : 'glass-input border-white/60'
+      }`}
+    >
+      {/* Background Animation */}
+      <motion.div
+        initial={false}
+        animate={{
+          x: humour ? '0%' : '-100%',
+        }}
+        transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+        className="absolute inset-0 bg-gradient-to-r from-[#E9D9FA] to-[#F1C5F0] z-0"
+      />
+
+      {/* Handle */}
+      <motion.div
+        layout
+        transition={{ type: 'spring', stiffness: 150, damping: 25 }}
+        className={`relative z-20 w-10 h-10 rounded-full shadow-md flex items-center justify-center ${
+          humour ? 'bg-white' : 'bg-white/80'
         }`}
+        style={{
+          marginLeft: humour ? 'auto' : '0',
+          marginRight: humour ? '0' : 'auto',
+        }}
       >
-        <span
-          aria-hidden="true"
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            humour ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
-      </button>
-    </div>
+        <motion.div
+          animate={{ rotate: humour ? 180 : 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-gray-900"
+        >
+          {humour ? '✨' : '⚡️'}
+        </motion.div>
+      </motion.div>
+
+      {/* Text Label */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <motion.span
+          animate={{
+            color: humour ? '#111827' : '#6B7280',
+            opacity: 1,
+          }}
+          transition={{ duration: 0.8 }}
+          className="text-xs font-bold font-subheading tracking-widest uppercase"
+        >
+          {humour ? 'Witty Hook: ON' : 'Witty Hook: OFF'}
+        </motion.span>
+      </div>
+    </motion.button>
   );
 }

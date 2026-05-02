@@ -13,21 +13,21 @@
  */
 export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
   return (
-    <article className="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+    <article className="glass-panel rounded-2xl p-8 mt-6">
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-4 text-center">
         Your personalised message
       </h2>
 
-      <p className="text-gray-800 text-base leading-relaxed whitespace-pre-wrap">
+      <p className="text-gray-900 text-lg leading-relaxed whitespace-pre-wrap font-medium text-center">
         {message}
       </p>
 
-      <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+      <div className="flex flex-wrap items-center justify-center gap-4 mt-8 pt-6 border-t border-white/50">
         <button
           type="button"
           onClick={onCopy}
           aria-label="Copy message to clipboard"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="inline-flex items-center justify-center rounded-full border border-white/80 bg-white/60 px-6 py-2.5 text-sm font-medium text-gray-800 hover:bg-white transition-all shadow-sm"
         >
           Copy
         </button>
@@ -41,14 +41,14 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
           href={sheetUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 underline"
+          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 underline underline-offset-4"
         >
           View log
         </a>
       </div>
 
       {sheetStatus === 'error' && (
-        <p className="text-sm text-amber-700 mt-2">
+        <p className="text-sm text-red-500 mt-4 text-center font-medium">
           Could not save to Sheets. Your message is still available above.
         </p>
       )}
@@ -79,10 +79,10 @@ function SaveButton({ onSave, sheetStatus }) {
       disabled={isSaving || isSaved}
       aria-busy={isSaving}
       aria-disabled={isSaving || isSaved}
-      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+      className={`inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium transition-all shadow-sm ${
         isSaved
-          ? 'bg-green-50 text-green-700 border border-green-200'
-          : 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50'
+          ? 'bg-green-100 text-green-800 border border-green-200'
+          : 'bg-gradient-to-r from-[#E9D9FA] to-[#F1C5F0] text-gray-900 border border-white/60 hover:shadow-md disabled:opacity-50'
       }`}
     >
       {buttonText}

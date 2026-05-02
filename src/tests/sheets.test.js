@@ -4,6 +4,7 @@ vi.stubEnv('VITE_SHEET_ID', 'test-sheet-id-123');
 vi.stubEnv('VITE_APPS_SCRIPT_URL', 'https://script.google.com/macros/s/test-id/exec');
 
 const SAMPLE_ROW_DATA = {
+  name: 'Sarah Chen',
   gender: 'Male',
   ageRange: '26–35',
   country: 'India',
@@ -34,6 +35,7 @@ describe('appendToSheet', () => {
     expect(options.method).toBe('POST');
 
     const body = JSON.parse(options.body);
+    expect(body.name).toBe('Sarah Chen');
     expect(body.gender).toBe('Male');
     expect(body.humour).toBe('Yes');
     expect(body.intent).toBe('Selling CRM software');

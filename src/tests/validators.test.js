@@ -8,6 +8,23 @@ import {
 describe('validateProspectInput', () => {
   it('returns valid for sufficient prospect info', () => {
     const result = validateProspectInput({
+      name: 'Sarah Chen',
+      prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
+    });
+    expect(result).toEqual({ valid: true, error: null });
+  });
+
+  it('returns invalid when name is too short', () => {
+    const result = validateProspectInput({
+      name: 'S',
+      prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('valid name');
+  });
+
+  it('returns valid when name is missing but prospect info is fine', () => {
+    const result = validateProspectInput({
       prospectInfo: 'Sarah Chen is the Head of Growth at Acme Corp with 10 years experience',
     });
     expect(result).toEqual({ valid: true, error: null });
