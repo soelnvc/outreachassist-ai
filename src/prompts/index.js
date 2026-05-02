@@ -15,10 +15,10 @@ const BANNED_PHRASES = [
 ];
 
 /**
- * Builds a personalized cold outreach prompt from prospect data.
- * Includes optional demographic context, intent, and humour instruction.
- *
- * @param {Object} prospectData - The form data object
+ * Builds the prompt string to send to Gemini based on the collected user inputs
+ * and the logged-in user's profile data.
+ * 
+ * @param {Object} prospectData - The collected form data
  * @param {string} [prospectData.name] - Prospect name
  * @param {string} prospectData.prospectInfo - Raw prospect information (required)
  * @param {string} [prospectData.intent] - Optional outreach goal
@@ -28,10 +28,10 @@ const BANNED_PHRASES = [
  * @param {string|null} prospectData.profession - Selected profession or null
  * @param {string|null} prospectData.maritalStatus - Selected marital status or null
  * @param {boolean} prospectData.humour - Whether to include humour instruction
- * @returns {string} The complete prompt string ready to send to Gemini
- * @throws {Error} If prospectInfo is missing or too short
+ * @param {Object} [userProfile] - The logged-in user's profile data
+ * @returns {string} The formatted prompt
  */
-export function buildPersonalizerPrompt(prospectData) {
+export function buildPersonalizerPrompt(prospectData, userProfile) {
   if (
     !prospectData.prospectInfo ||
     prospectData.prospectInfo.trim().length < MIN_PROSPECT_LENGTH
@@ -74,13 +74,21 @@ export function buildPersonalizerPrompt(prospectData) {
     ? `\nHUMOUR INSTRUCTION:\nBefore the main message, add ONE line that shows you're self-aware about cold-messaging. Examples of the TONE (do not copy these literally):\n- "This is technically a cold message, but I've read enough about your work that it feels weird calling it that."\n- "I promise this isn't another 'quick 15-min call' message. Okay, it kind of is. But hear me out."\n- "I spent way too long reading your profile before writing this, so at minimum I'm a dedicated cold-emailer."\nMake it specific to their situation. Never use a meme. Never reference internet culture. Just be a witty, self-aware human.\n`
     : '';
 
+  let userProfileBlock = '';
+  if (userProfile && (userProfile.name || userProfile.work || userProfile.about)) {
+    userProfileBlock = `\nABOUT YOU (The Sender):\nUse the following information to find similarities with the prospect and briefly introduce yourself where natural. Keep your introduction minimal.\n`;
+    if (userProfile.name) userProfileBlock += `- Your Name: ${userProfile.name}\n`;
+    if (userProfile.work) userProfileBlock += `- Your Role/Profession: ${userProfile.work}\n`;
+    if (userProfile.about) userProfileBlock += `- About You: ${userProfile.about}\n`;
+  }
+
   return `You are writing a short, personal message to someone you've looked into and genuinely want to reach out to. This is NOT a sales template. This is a real human writing to another real human.
 
 Here is everything you know about this person:
 """
 ${sanitizedInfo}
 """
-${nameBlock}${intentBlock}${contextBlock}
+${nameBlock}${intentBlock}${contextBlock}${userProfileBlock}
 WRITING RULES — follow these exactly:
 1. Start with something specific you noticed about THEM — not a generic opener like "I came across your profile." Pull a real detail from the info above.
 2. If the Prospect Name is provided, address them by their first name naturally in the message.

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { InputForm } from '../../components/InputForm.jsx';
@@ -14,6 +14,7 @@ import { SidebarFooter, AIDisclaimer } from '../../components/Footer.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
 import { saveHistory } from '../../services/history.js';
+import { getUserProfile } from '../../services/userProfile.js';
 
 /**
  * PersonalizerPage — the main feature page that wires form input to prompt
@@ -25,7 +26,20 @@ import { saveHistory } from '../../services/history.js';
 export function PersonalizerPage() {
   const { currentUser, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   
+  useEffect(() => {
+    async function loadProfile() {
+      if (currentUser) {
+        const profile = await getUserProfile(currentUser.uid);
+        setUserProfile(profile);
+      } else {
+        setUserProfile(null);
+      }
+    }
+    loadProfile();
+  }, [currentUser]);
+
   const [formData, setFormData] = useState({
     name: '',
     prospectInfo: '',
@@ -82,7 +96,7 @@ export function PersonalizerPage() {
     setIsLoading(true);
 
     try {
-      const prompt = buildPersonalizerPrompt(formData);
+      const prompt = buildPersonalizerPrompt(formData, userProfile);
       const rawResponse = await callGemini(prompt, abortControllerRef.current.signal);
       const parsed = parseApiResponse(rawResponse);
       setResult(parsed);
@@ -100,7 +114,7 @@ export function PersonalizerPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, currentUser]);
+  }, [formData, currentUser, userProfile]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
@@ -124,7 +138,7 @@ export function PersonalizerPage() {
           <Link to="/history" className="nav-link-underline pb-1 transition-colors">History</Link>
           <a href={sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
           <a href="#" className="nav-link-underline pb-1 transition-colors">How to Use</a>
-          <a href="#" className="nav-link-underline pb-1 transition-colors">Settings</a>
+          <Link to="/settings" className="nav-link-underline pb-1 transition-colors">Settings</Link>
         </nav>
 
         {/* Bottom: Footer Section */}
@@ -137,7 +151,9 @@ export function PersonalizerPage() {
         {/* Header */}
         <header className="flex justify-between items-center mb-8">
           <h2 className="text-4xl font-bold font-heading tracking-tight">
-            Welcome Back {currentUser?.displayName?.split(' ')[0] || formData.name || '{User Name}'}
+            Welcome Back, <span className="bg-gradient-to-r from-[#F472B6] to-[#FDE047] bg-clip-text text-transparent">
+              {userProfile?.name?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'there'}
+            </span>
           </h2>
           {currentUser ? (
             <div className="flex items-center gap-4">

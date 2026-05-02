@@ -54,7 +54,7 @@ export function HistoryPage() {
           <Link to="/history" className="nav-link-underline pb-1 transition-colors font-semibold">History</Link>
           <a href={sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
           <a href="#" className="nav-link-underline pb-1 transition-colors">How to Use</a>
-          <a href="#" className="nav-link-underline pb-1 transition-colors">Settings</a>
+          <Link to="/settings" className="nav-link-underline pb-1 transition-colors">Settings</Link>
         </nav>
 
         <SidebarFooter />
@@ -124,23 +124,53 @@ export function HistoryPage() {
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="glass-panel rounded-3xl p-6 flex flex-col gap-4 border border-white/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+                  whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
+                  transition={{ duration: 0.4, delay: index * 0.1, type: "spring", stiffness: 300, damping: 20 }}
+                  className="glass-panel rounded-3xl p-6 flex flex-col gap-4 border border-white/60 shadow-sm relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start mb-2 border-b border-white/40 pb-4">
                     <div>
                       <h3 className="text-lg font-bold font-heading text-gray-900">{item.formData.name || 'Unknown Prospect'}</h3>
-                      <p className="text-xs font-light text-gray-500 mt-1 uppercase tracking-wider">{item.formData.profession || 'Profession Not Specified'}</p>
+                      <p className="text-xs font-light text-gray-500 mt-1 uppercase tracking-wider">
+                        {item.formData.profession || 'Profession Not Specified'}
+                        {item.formData.country ? ` • ${item.formData.country}` : ''}
+                      </p>
                     </div>
-                    <span className="text-xs font-light text-gray-400">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Just now'}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-light text-gray-400">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Just now'}
+                      </span>
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(item.generatedMessage)}
+                        className="text-gray-400 hover:text-gray-900 transition-colors"
+                        title="Copy to clipboard"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
                     {item.formData.intent && (
                       <span className="px-3 py-1 bg-white/50 rounded-full text-xs font-light text-gray-700">
                         🎯 {item.formData.intent.substring(0, 30)}{item.formData.intent.length > 30 ? '...' : ''}
+                      </span>
+                    )}
+                    {item.formData.gender && (
+                      <span className="px-3 py-1 bg-white/50 rounded-full text-xs font-light text-gray-700">
+                        {item.formData.gender}
+                      </span>
+                    )}
+                    {item.formData.ageRange && (
+                      <span className="px-3 py-1 bg-white/50 rounded-full text-xs font-light text-gray-700">
+                        {item.formData.ageRange}
+                      </span>
+                    )}
+                    {item.formData.maritalStatus && (
+                      <span className="px-3 py-1 bg-white/50 rounded-full text-xs font-light text-gray-700">
+                        {item.formData.maritalStatus}
                       </span>
                     )}
                     {item.formData.humour && (
@@ -153,16 +183,6 @@ export function HistoryPage() {
                   <div className="bg-white/30 rounded-2xl p-4 mt-2 max-h-48 overflow-y-auto custom-scrollbar">
                     <p className="text-sm font-light text-gray-800 whitespace-pre-wrap">{item.generatedMessage}</p>
                   </div>
-                  
-                  <button 
-                    onClick={() => navigator.clipboard.writeText(item.generatedMessage)}
-                    className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors"
-                    title="Copy to clipboard"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
                 </motion.div>
               ))}
             </div>
