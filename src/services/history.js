@@ -72,3 +72,39 @@ export async function getUserHistory(userId) {
     throw error;
   }
 }
+
+/**
+ * Deletes a single history item by ID.
+ */
+export async function deleteHistoryItem(historyId) {
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const docRef = doc(db, HISTORY_COLLECTION, historyId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error("Error deleting history item:", error);
+    throw error;
+  }
+}
+
+/**
+ * Clears all history for a specific user.
+ */
+export async function clearUserHistory(userId) {
+  if (!userId) return;
+  try {
+    const { writeBatch } = await import('firebase/firestore');
+    const q = query(collection(db, HISTORY_COLLECTION), where("userId", "==", userId));
+    const snapshot = await getDocs(q);
+    
+    const batch = writeBatch(db);
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    
+    await batch.commit();
+  } catch (error) {
+    console.error("Error clearing user history:", error);
+    throw error;
+  }
+}

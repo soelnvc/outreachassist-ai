@@ -336,7 +336,7 @@ export function SettingsPage() {
                   </motion.a>
                   
                   <motion.a 
-                    href="#" 
+                    href="mailto:soelnvc@gmail.com?subject=Technical Support: OutreachAI" 
                     whileHover={{ y: -4, backgroundColor: 'rgba(255, 255, 255, 0.5)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
                     whileTap={{ scale: 0.98 }}
                     className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group"

@@ -22,10 +22,10 @@ export function SidebarFooter() {
           <Link to="/privacy" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
             Privacy Policy
           </Link>
-          <a href="#" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
+          <Link to="/terms" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
             Terms of Service
-          </a>
-          <a href="#" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
+          </Link>
+          <a href="mailto:soelnvc@gmail.com?subject=Support Request: OutreachAI" className="text-[10px] text-gray-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-2 decoration-gray-300">
             Contact Support
           </a>
         </nav>

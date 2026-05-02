@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { getUserHistory, updateHistorySavedStatus } from '../../services/history.js';
+import { getUserHistory, updateHistorySavedStatus, deleteHistoryItem, clearUserHistory } from '../../services/history.js';
 import { getUserProfile } from '../../services/userProfile.js';
 import { SidebarFooter } from '../../components/Footer.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
 import { appendToSheet, getSheetUrl } from '../../services/sheets.js';
-import { FiCopy, FiCheck, FiSave, FiLoader, FiExternalLink, FiAlertCircle } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiSave, FiLoader, FiExternalLink, FiAlertCircle, FiTrash2 } from 'react-icons/fi';
 
 export function HistoryPage() {
   const { currentUser, signOut } = useAuth();
@@ -18,6 +18,8 @@ export function HistoryPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [savingIds, setSavingIds] = useState({}); // { [id]: 'saving' | 'saved' | 'error' }
   const [copiedId, setCopiedId] = useState(null);
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const sheetUrl = getSheetUrl();
 
   useEffect(() => {
@@ -81,6 +83,26 @@ export function HistoryPage() {
     }
   };
 
+  const handleDeleteItem = async (id) => {
+    try {
+      await deleteHistoryItem(id);
+      setHistory(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error("Failed to delete item", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!currentUser) return;
+    try {
+      await clearUserHistory(currentUser.uid);
+      setHistory([]);
+      setIsConfirmingClear(false);
+    } catch (error) {
+      console.error("Failed to clear history", error);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
@@ -108,29 +130,82 @@ export function HistoryPage() {
       </aside>
 
       <main className="flex-1 flex flex-col p-6 md:p-12 h-screen overflow-y-auto">
-        <header className="flex justify-between items-center mb-8">
-          <h2 className="text-4xl font-bold font-heading tracking-tight">
-            Your Generation History
-          </h2>
-          {currentUser ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
+        <header className="flex justify-between items-start mb-2">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-4xl font-bold font-heading tracking-tight">
+              Your Generation History
+            </h2>
+            <p className="text-[10px] font-light text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <FiAlertCircle size={10} /> History is automatically cleared every 30 days.
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-end gap-4">
+            {currentUser ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
+                <button 
+                  onClick={signOut}
+                  className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
+                >
+                  <span className="relative z-10">Sign Out</span>
+                </button>
+              </div>
+            ) : (
               <button 
-                onClick={signOut}
+                onClick={() => setIsAuthModalOpen(true)}
                 className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
               >
-                <span className="relative z-10">Sign Out</span>
+                <span className="relative z-10">Login / Sign UP</span>
               </button>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setIsAuthModalOpen(true)}
-              className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
-            >
-              <span className="relative z-10">Login / Sign UP</span>
-            </button>
-          )}
+            )}
+
+            {currentUser && history.length > 0 && (
+              <button
+                onClick={() => setIsConfirmingClear(true)}
+                className="text-[10px] font-semibold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1"
+              >
+                Empty History <FiTrash2 size={10} />
+              </button>
+            )}
+          </div>
         </header>
+
+        {/* Clear History Confirmation Modal */}
+        <AnimatePresence>
+          {isConfirmingClear && (
+            <div className="fixed inset-0 z-[10000] bg-white/10 backdrop-blur-md flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-10 text-center border border-white shadow-2xl"
+              >
+                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FiAlertCircle className="text-4xl text-red-500" />
+                </div>
+                <h3 className="text-2xl font-bold font-heading text-gray-900 mb-2">Clear All History?</h3>
+                <p className="text-gray-600 font-light mb-8 leading-relaxed">
+                  This will permanently delete all your generated messages. This action cannot be undone.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleClearAll}
+                    className="liquid-button bg-red-500 text-white px-8 py-3 rounded-full font-semibold shadow-lg shadow-red-200"
+                  >
+                    <span className="relative z-10">Yes, Clear Everything</span>
+                  </button>
+                  <button 
+                    onClick={() => setIsConfirmingClear(false)}
+                    className="px-8 py-3 rounded-full text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -187,15 +262,55 @@ export function HistoryPage() {
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
                         {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Just now'}
                       </span>
-                      <motion.button 
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleCopy(item.id, item.generatedMessage)}
-                        className={`transition-colors ${copiedId === item.id ? 'text-green-500' : 'text-gray-400 hover:text-gray-900'}`}
-                        title="Copy to clipboard"
-                      >
-                        {copiedId === item.id ? <FiCheck size={18} /> : <FiCopy size={18} />}
-                      </motion.button>
+                      <div className="flex items-center gap-2 border-l border-white/40 pl-3 ml-1">
+                        <motion.button 
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleCopy(item.id, item.generatedMessage)}
+                          className={`transition-colors ${copiedId === item.id ? 'text-green-500' : 'text-gray-400 hover:text-gray-900'}`}
+                          title="Copy to clipboard"
+                        >
+                          {copiedId === item.id ? <FiCheck size={16} /> : <FiCopy size={16} />}
+                        </motion.button>
+                        <AnimatePresence mode="wait">
+                          {deletingId !== item.id ? (
+                            <motion.button 
+                              key="del-init"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.8 }}
+                              whileHover={{ scale: 1.1, color: '#ef4444' }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => setDeletingId(item.id)}
+                              className="text-gray-400 transition-colors"
+                              title="Delete"
+                            >
+                              <FiTrash2 size={16} />
+                            </motion.button>
+                          ) : (
+                            <motion.div
+                              key="del-confirm"
+                              initial={{ opacity: 0, x: 5 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 5 }}
+                              className="flex items-center gap-2"
+                            >
+                              <button 
+                                onClick={() => setDeletingId(null)}
+                                className="text-[10px] font-semibold text-gray-400 hover:text-gray-900 uppercase"
+                              >
+                                No
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase underline underline-offset-2"
+                              >
+                                Yes
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
                   
