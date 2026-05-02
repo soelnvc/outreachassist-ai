@@ -12,7 +12,7 @@
 
 .nav-link-underline::after {
   content: '';
-  @apply absolute bottom-0 left-0 w-full h-[1px] bg-gray-900 scale-x-0 origin-left transition-transform duration-300 ease-out;
+  @apply absolute bottom-0 left-0 w-full h-[1px] bg-[#A78BFA] scale-x-0 origin-left transition-transform duration-300 ease-out;
 }
 
 .nav-link-underline:hover::after {

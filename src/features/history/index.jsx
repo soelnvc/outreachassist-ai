@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { getUserHistory, updateHistorySavedStatus, deleteHistoryItem, clearUserHistory } from '../../services/history.js';
 import { getUserProfile } from '../../services/userProfile.js';
-import { SidebarFooter } from '../../components/Footer.jsx';
+import { Sidebar } from '../../components/Sidebar.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
 import { appendToSheet, getSheetUrl } from '../../services/sheets.js';
@@ -108,26 +108,7 @@ export function HistoryPage() {
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       
       {/* Sidebar */}
-      <aside className="w-64 bg-[#E0D0F5]/40 backdrop-blur-md border-r border-white/50 flex flex-col justify-between hidden lg:flex sticky top-0 h-screen shadow-lg">
-        <div className="p-8">
-          <h1 className="text-2xl font-bold font-heading tracking-tight leading-tight text-gray-900 text-center uppercase">
-            OutreachAI <br /> Sales <br /> Copilot
-          </h1>
-          <p className="mt-4 text-[10px] text-center text-gray-600 leading-tight font-medium">
-            AI-powered cold outreach <br /> for modern sales teams.
-          </p>
-        </div>
-
-        <nav className="flex flex-col gap-10 items-center font-light font-subheading text-gray-700 text-base">
-          <Link to="/" className="nav-link-underline pb-1 transition-colors">Workspace</Link>
-          <Link to="/history" className="nav-link-underline pb-1 transition-colors font-semibold">History</Link>
-          <a href={userProfile?.viewUrl || sheetUrl} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
-          <Link to="/guide" className="nav-link-underline pb-1 transition-colors">How to Use</Link>
-          <Link to="/settings" className="nav-link-underline pb-1 transition-colors">Settings</Link>
-        </nav>
-
-        <SidebarFooter />
-      </aside>
+      <Sidebar userProfile={userProfile} sheetUrl={sheetUrl} />
 
       <main className="flex-1 flex flex-col p-6 md:p-12 h-screen overflow-y-auto">
         <header className="flex justify-between items-start mb-2">

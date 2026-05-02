@@ -14,6 +14,7 @@ import {
   FiShield
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { Sidebar } from '../../components/Sidebar.jsx';
 import { SidebarFooter } from '../../components/Footer.jsx';
 import { getUserProfile } from '../../services/userProfile.js';
 
@@ -80,26 +81,7 @@ export function GuidePage() {
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
       
       {/* Sidebar */}
-      <aside className="w-64 bg-[#E0D0F5]/40 backdrop-blur-md border-r border-white/50 flex flex-col justify-between hidden lg:flex sticky top-0 h-screen shadow-lg">
-        <div className="p-8">
-          <h1 className="text-2xl font-bold font-heading tracking-tight leading-tight text-gray-900 text-center uppercase">
-            OutreachAI <br /> Sales <br /> Copilot
-          </h1>
-          <p className="mt-4 text-[10px] text-center text-gray-600 leading-tight font-medium">
-            Master the art of <br /> B2B personalization.
-          </p>
-        </div>
-
-        <nav className="flex flex-col gap-10 items-center font-light font-subheading text-gray-700 text-base">
-          <Link to="/" className="nav-link-underline pb-1 transition-colors">Workspace</Link>
-          <Link to="/history" className="nav-link-underline pb-1 transition-colors">History</Link>
-          <a href={userProfile?.viewUrl || "#"} target="_blank" rel="noopener noreferrer" className="nav-link-underline pb-1 transition-colors">Logs</a>
-          <Link to="/guide" className="nav-link-underline pb-1 transition-colors font-semibold">How to Use</Link>
-          <Link to="/settings" className="nav-link-underline pb-1 transition-colors">Settings</Link>
-        </nav>
-
-        <SidebarFooter />
-      </aside>
+      <Sidebar userProfile={userProfile} />
 
       <main className="flex-1 flex flex-row h-screen overflow-hidden">
         

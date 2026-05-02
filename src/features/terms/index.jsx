@@ -1,29 +1,14 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FiFileText, FiAlertTriangle, FiUserCheck, FiZap, FiArrowLeft } from 'react-icons/fi';
-import { SidebarFooter } from '../../components/Footer.jsx';
+import { Sidebar } from '../../components/Sidebar.jsx';
 
 export function TermsPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
       
       {/* Sidebar */}
-      <aside className="w-64 bg-[#E0D0F5]/40 backdrop-blur-md border-r border-white/50 flex flex-col justify-between hidden lg:flex sticky top-0 h-screen shadow-lg">
-        <div className="p-8">
-          <h1 className="text-2xl font-bold font-heading tracking-tight leading-tight text-gray-900 text-center uppercase">
-            OutreachAI <br /> Sales <br /> Copilot
-          </h1>
-        </div>
-
-        <nav className="flex flex-col gap-10 items-center font-light font-subheading text-gray-700 text-base">
-          <Link to="/" className="nav-link-underline pb-1 transition-colors">Workspace</Link>
-          <Link to="/history" className="nav-link-underline pb-1 transition-colors">History</Link>
-          <Link to="/guide" className="nav-link-underline pb-1 transition-colors">How to Use</Link>
-          <Link to="/settings" className="nav-link-underline pb-1 transition-colors">Settings</Link>
-        </nav>
-
-        <SidebarFooter />
-      </aside>
+      <Sidebar />
 
       <main className="flex-1 p-8 md:p-16 h-screen overflow-y-auto custom-scrollbar">
         <div className="max-w-3xl mx-auto">

@@ -12,17 +12,23 @@ export function TOSGuard({ children }) {
 
   useEffect(() => {
     async function checkTOS() {
-      if (currentUser) {
-        const profile = await getUserProfile(currentUser.uid);
-        if (profile && profile.acceptedTOS) {
-          setHasAccepted(true);
+      try {
+        if (currentUser) {
+          const profile = await getUserProfile(currentUser.uid);
+          if (profile && profile.acceptedTOS) {
+            setHasAccepted(true);
+          } else {
+            setHasAccepted(false);
+          }
         } else {
-          setHasAccepted(false);
+          setHasAccepted(true); // Don't block guests
         }
-      } else {
-        setHasAccepted(true); // Don't block guests (AuthModal will handle them)
+      } catch (error) {
+        console.error("TOS Check error:", error);
+        setHasAccepted(true); // Default to accepted on error to avoid lockout
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     checkTOS();
   }, [currentUser]);
@@ -41,7 +47,16 @@ export function TOSGuard({ children }) {
     setShowRejection(true);
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-[#EAE6F5] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#A78BFA]/30 border-t-[#A78BFA] rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-500 animate-pulse">Launching OutreachAI...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (showRejection) {
     return (
