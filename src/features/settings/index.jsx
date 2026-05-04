@@ -48,8 +48,6 @@ export function SettingsPage() {
   const [isShowingSignOutConfirm, setIsShowingSignOutConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   const [history, setHistory] = useState([]);
-  const sheetUrl = useMemo(() => getSheetUrl(profile.sheetsUrl), [profile.sheetsUrl]);
-
   const [profile, setProfile] = useState({
     name: '',
     about: '',
@@ -58,6 +56,8 @@ export function SettingsPage() {
     sheetsUrl: '',
     viewUrl: ''
   });
+
+  const sheetUrl = useMemo(() => getSheetUrl(profile.sheetsUrl), [profile.sheetsUrl]);
 
   useEffect(() => {
     async function loadData() {
