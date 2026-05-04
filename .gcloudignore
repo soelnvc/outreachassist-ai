@@ -1,0 +1,9 @@
+# Ignore everything in .gitignore EXCEPT for .env
+#!include:.gitignore
+.git
+.vscode
+node_modules
+dist
+
+# Ensure .env IS included so the build has access to keys
+!.env
