@@ -20,7 +20,7 @@ export async function callGemini(prompt, signal) {
 
   const url = `${GEMINI_API_URL}?key=${apiKey}`;
 
-  const response = await fetch(url, {
+  const geminiResponse = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -36,9 +36,9 @@ export async function callGemini(prompt, signal) {
     signal,
   });
 
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+  if (!geminiResponse.ok) {
+    throw new Error(`Gemini API error: ${geminiResponse.status} ${geminiResponse.statusText}`);
   }
 
-  return response.json();
+  return geminiResponse.json();
 }

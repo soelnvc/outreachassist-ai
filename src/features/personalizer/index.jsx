@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { InputForm } from '../../components/InputForm.jsx';
 import { OutputCard } from '../../components/OutputCard.jsx';
 import { ErrorMessage } from '../../components/ErrorMessage.jsx';
@@ -18,29 +17,20 @@ import { getUserProfile } from '../../services/userProfile.js';
 import { AIDisclaimer } from '../../components/Footer.jsx';
 import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
 import { FiLogOut } from 'react-icons/fi';
+import { PersonalizerHeader } from './components/PersonalizerHeader.jsx';
 
 /**
  * PersonalizerPage — the main feature page that wires form input to prompt
  * building, Gemini API calls, response parsing, and Google Sheets logging.
+ *
+ * @returns {JSX.Element}
  */
 export function PersonalizerPage() {
   const { currentUser, signOut } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [currentHistoryId, setCurrentHistoryId] = useState(null);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
-  
-  useEffect(() => {
-    async function loadProfile() {
-      if (currentUser) {
-        const profile = await getUserProfile(currentUser.uid);
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
-    }
-    loadProfile();
-  }, [currentUser]);
+  const [isShowingSignOutConfirm, setIsShowingSignOutConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -55,45 +45,56 @@ export function PersonalizerPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [generationResult, setGenerationResult] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [sheetStatus, setSheetStatus] = useState(null);
 
   const abortControllerRef = useRef(null);
   const sheetUrl = useMemo(() => getSheetUrl(), []);
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (currentUser) {
+        const profile = await getUserProfile(currentUser.uid);
+        setUserProfile(profile);
+      } else {
+        setUserProfile(null);
+      }
+    }
+    loadProfile();
+  }, [currentUser]);
 
   const handleFieldChange = useCallback((field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   const handleCopy = useCallback(() => {
-    if (result?.message) {
-      navigator.clipboard.writeText(result.message);
+    if (generationResult?.message) {
+      navigator.clipboard.writeText(generationResult.message);
     }
-  }, [result]);
+  }, [generationResult]);
 
   const handleSave = useCallback(() => {
-    if (!result?.message) return;
+    if (!generationResult?.message) return;
     setSheetStatus('saving');
-    appendToSheet({ ...formData, message: result.message }, userProfile?.sheetsUrl)
+    appendToSheet({ ...formData, message: generationResult.message }, userProfile?.sheetsUrl)
       .then(async () => {
         setSheetStatus('saved');
-        // Persist to Firestore if we have a history ID
         if (currentHistoryId) {
           try {
             await updateHistorySavedStatus(currentHistoryId, true);
-          } catch (err) {
-            console.error("Failed to update history saved status:", err);
+          } catch {
+            // Non-critical: sheet was saved, history flag update failed silently
           }
         }
       })
       .catch(() => setSheetStatus('error'));
-  }, [formData, result, currentHistoryId]);
+  }, [formData, generationResult, currentHistoryId, userProfile]);
 
   const handleSubmit = useCallback(async () => {
     const validation = validateProspectInput(formData);
     if (!validation.valid) {
-      setError(validation.error);
+      setErrorMessage(validation.error);
       return;
     }
 
@@ -102,8 +103,8 @@ export function PersonalizerPage() {
     }
     abortControllerRef.current = new AbortController();
 
-    setResult(null);
-    setError(null);
+    setGenerationResult(null);
+    setErrorMessage(null);
     setSheetStatus(null);
     setCurrentHistoryId(null);
     setIsLoading(true);
@@ -112,21 +113,20 @@ export function PersonalizerPage() {
       const prompt = buildPersonalizerPrompt(formData, userProfile);
       const rawResponse = await callGemini(prompt, abortControllerRef.current.signal);
       const parsed = parseApiResponse(rawResponse);
-      setResult(parsed);
-      
-      // Save to Firebase History if logged in
+      setGenerationResult(parsed);
+
       if (currentUser && parsed?.message) {
         saveHistory(currentUser.uid, formData, parsed.message)
           .then(id => {
             setCurrentHistoryId(id);
           })
-          .catch(err => {
-            console.error("Failed to save history:", err);
+          .catch(() => {
+            // Non-critical: generation succeeded, history save failed silently
           });
       }
-    } catch (err) {
-      if (err.name === 'AbortError') return;
-      setError('Something went wrong. Please try again.');
+    } catch (submitError) {
+      if (submitError.name === 'AbortError') return;
+      setErrorMessage('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -135,46 +135,23 @@ export function PersonalizerPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-      
-      {/* Sidebar */}
+
       <Sidebar userProfile={userProfile} sheetUrl={sheetUrl} />
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col p-6 md:p-12 h-screen overflow-y-auto">
-        
-        {/* Header */}
-        <header className="flex justify-between items-center mb-8">
-          <h2 className="text-4xl font-bold font-heading tracking-tight">
-            Welcome Back, <span className="bg-gradient-to-r from-[#F472B6] to-[#FDE047] bg-clip-text text-transparent">
-              {userProfile?.name?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'there'}
-            </span>
-          </h2>
-          {currentUser ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
-              <button 
-                onClick={() => setShowSignOutConfirm(true)}
-                className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
-              >
-                <span className="relative z-10">Sign Out</span>
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setIsAuthModalOpen(true)}
-              className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
-            >
-              <span className="relative z-10">Login / Sign Up</span>
-            </button>
-          )}
-        </header>
+        <PersonalizerHeader
+          currentUser={currentUser}
+          userProfile={userProfile}
+          onLoginClick={() => setIsAuthModalOpen(true)}
+          onSignOutClick={() => setIsShowingSignOutConfirm(true)}
+        />
 
         <ConfirmationModal
-          isOpen={showSignOutConfirm}
-          onClose={() => setShowSignOutConfirm(false)}
+          isOpen={isShowingSignOutConfirm}
+          onClose={() => setIsShowingSignOutConfirm(false)}
           onConfirm={() => {
             signOut();
-            setShowSignOutConfirm(false);
+            setIsShowingSignOutConfirm(false);
           }}
           title="Sign Out?"
           message="Are you sure you want to sign out of your OutreachAI account?"
@@ -183,11 +160,10 @@ export function PersonalizerPage() {
           icon={<FiLogOut className="text-4xl text-red-500" />}
         />
 
-        {/* Content Wrapper with Framer Motion */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
           className="flex-1 flex flex-col"
         >
           <section aria-labelledby="form-heading" className="flex-1">
@@ -200,20 +176,20 @@ export function PersonalizerPage() {
             />
           </section>
 
-          <ErrorMessage message={error} />
+          <ErrorMessage message={errorMessage} />
 
           {isLoading && (
             <LoadingSpinner message="Crafting your personalised message..." />
           )}
 
-          {result && (
+          {generationResult && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-8"
             >
               <OutputCard
-                message={result.message}
+                message={generationResult.message}
                 onCopy={handleCopy}
                 onSave={handleSave}
                 sheetStatus={sheetStatus}

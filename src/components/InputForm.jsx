@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FiLoader } from 'react-icons/fi';
 import {
@@ -13,12 +14,19 @@ import { HumourToggle } from './HumourToggle.jsx';
 /**
  * Renders the accessible input form with glassmorphism styling
  * for B2B Sales oriented outreach.
+ *
+ * @param {Object} props
+ * @param {Object} props.formData - Current form state
+ * @param {Function} props.onFieldChange - Callback to update a form field
+ * @param {Function} props.onSubmit - Callback to trigger form submission
+ * @param {boolean} props.isLoading - Whether a generation request is in progress
+ * @returns {JSX.Element}
  */
 export function InputForm({ formData, onFieldChange, onSubmit, isLoading }) {
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = useCallback((e) => {
     e.preventDefault();
     onSubmit();
-  };
+  }, [onSubmit]);
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -135,7 +143,7 @@ export function InputForm({ formData, onFieldChange, onSubmit, isLoading }) {
         </div>
         <div className="flex items-center justify-center">
           <HumourToggle
-            humour={formData.humour}
+            isHumourEnabled={formData.humour}
             onToggle={() => onFieldChange('humour', !formData.humour)}
           />
         </div>
@@ -153,7 +161,7 @@ export function InputForm({ formData, onFieldChange, onSubmit, isLoading }) {
           {isLoading && (
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
             >
               <FiLoader size={18} />
             </motion.div>

@@ -1,5 +1,7 @@
 const MAX_INPUT_LENGTH = 3000;
 const MIN_INPUT_LENGTH = 20;
+const MIN_NAME_LENGTH = 2;
+const MIN_INTENT_LENGTH = 10;
 
 /**
  * Sanitizes raw prospect info before including in a prompt.
@@ -16,8 +18,12 @@ export function sanitizeInput(input) {
     .replace(/\n{3,}/g, '\n\n');
 }
 
+/** @constant {number} Maximum allowed length for the prospect name field. */
 export const MAX_NAME_LENGTH = 100;
+
+/** @constant {number} Maximum allowed length for the outreach intent field. */
 export const MAX_INTENT_LENGTH = 500;
+
 export { MAX_INPUT_LENGTH, MIN_INPUT_LENGTH };
 
 /**
@@ -32,10 +38,10 @@ export { MAX_INPUT_LENGTH, MIN_INPUT_LENGTH };
  * @returns {{ valid: boolean, error: string|null }} Validation result
  */
 export function validateProspectInput(formData) {
-  if (formData.name && formData.name.trim().length > 0 && formData.name.trim().length < 2) {
+  if (formData.name && formData.name.trim().length > 0 && formData.name.trim().length < MIN_NAME_LENGTH) {
     return {
       valid: false,
-      error: 'Please enter a valid name (at least 2 characters).',
+      error: `Please enter a valid name (at least ${MIN_NAME_LENGTH} characters).`,
     };
   }
 
@@ -46,10 +52,10 @@ export function validateProspectInput(formData) {
     };
   }
 
-  if (formData.intent && formData.intent.trim().length > 0 && formData.intent.trim().length < 10) {
+  if (formData.intent && formData.intent.trim().length > 0 && formData.intent.trim().length < MIN_INTENT_LENGTH) {
     return {
       valid: false,
-      error: 'Please make your outreach goal a bit more specific (at least 10 characters).',
+      error: `Please make your outreach goal a bit more specific (at least ${MIN_INTENT_LENGTH} characters).`,
     };
   }
 

@@ -1,5 +1,6 @@
 const SHEET_ID = import.meta.env.VITE_SHEET_ID;
 const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+const PROSPECT_SNIPPET_MAX_LENGTH = 100;
 
 /**
  * Appends one row of generated message data to the Google Sheet
@@ -8,20 +9,20 @@ const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
  *
  * @param {Object} rowData - The data to log
  * @param {string|null} [customUrl] - User-specific Apps Script URL
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} Resolves to true on success
+ * @throws {Error} If the target URL is missing or the request fails
  */
 export async function appendToSheet(rowData, customUrl) {
   const targetUrl = customUrl || APPS_SCRIPT_URL;
 
   if (!targetUrl || targetUrl.trim() === '') {
-    console.error('Sheets Error: No target URL provided.');
     throw new Error('Google Apps Script URL is not configured in Settings.');
   }
 
   // Safety check for prospectInfo
   const prospectRaw = rowData.prospectInfo || rowData.prospectSnippet || '';
-  const prospectSnippet = prospectRaw.length > 100 
-    ? prospectRaw.slice(0, 100) + '...' 
+  const prospectSnippet = prospectRaw.length > PROSPECT_SNIPPET_MAX_LENGTH
+    ? prospectRaw.slice(0, PROSPECT_SNIPPET_MAX_LENGTH) + '...'
     : prospectRaw;
 
   const payload = {
@@ -38,22 +39,17 @@ export async function appendToSheet(rowData, customUrl) {
     message: rowData.message,
   };
 
-  try {
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' }, // Using text/plain to avoid CORS preflight issues with GAS
-      body: JSON.stringify(payload),
-    });
+  const sheetResponse = await fetch(targetUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Sheets Service Error:', error);
-    throw error;
+  if (!sheetResponse.ok) {
+    throw new Error(`Server responded with ${sheetResponse.status}`);
   }
+
+  return true;
 }
 
 /**

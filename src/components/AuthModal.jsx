@@ -1,19 +1,28 @@
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
+/**
+ * Renders a modal dialog for Google authentication.
+ *
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Whether the modal is visible
+ * @param {Function} props.onClose - Callback to close the modal
+ * @returns {JSX.Element|null}
+ */
 export function AuthModal({ isOpen, onClose }) {
   const { signInWithGoogle } = useAuth();
 
-  if (!isOpen) return null;
-
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = useCallback(async () => {
     try {
       await signInWithGoogle();
       onClose();
-    } catch (error) {
-      console.error("Error signing in with Google", error);
+    } catch {
+      // Auth errors are surfaced by Firebase UI; no action needed here
     }
-  };
+  }, [signInWithGoogle, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">

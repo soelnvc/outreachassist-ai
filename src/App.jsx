@@ -7,6 +7,11 @@ import { PrivacyPage } from './features/privacy/index.jsx';
 import { TermsPage } from './features/terms/index.jsx';
 import { TOSGuard } from './components/TOSGuard.jsx';
 
+/**
+ * The main application component that sets up routing and the Terms of Service guard.
+ *
+ * @returns {JSX.Element}
+ */
 export function App() {
   return (
     <BrowserRouter>

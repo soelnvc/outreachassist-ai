@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom';
 import { FiShield, FiLock, FiEye, FiServer, FiArrowLeft } from 'react-icons/fi';
 import { Sidebar } from '../../components/Sidebar.jsx';
 
+/**
+ * PrivacyPage — displays the OutreachAI privacy policy, emphasizing data ownership
+ * and AI processing standards.
+ *
+ * @returns {JSX.Element}
+ */
 export function PrivacyPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
@@ -76,7 +82,7 @@ export function PrivacyPage() {
 
             <div className="pt-8 border-t border-white/40">
               <p className="text-sm text-gray-400 font-light italic">
-                Questions about your data? Contact our privacy team at privacy@outreachai.com
+                Questions about your data? Contact our privacy team at soelnvc@gmail.com
               </p>
             </div>
           </article>

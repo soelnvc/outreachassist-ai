@@ -6,7 +6,7 @@ const VALID_PROSPECT_INFO =
 
 describe('buildPersonalizerPrompt', () => {
   it('returns a string containing the prospect info', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -15,12 +15,12 @@ describe('buildPersonalizerPrompt', () => {
       maritalStatus: null,
       humour: false,
     });
-    expect(typeof result).toBe('string');
-    expect(result).toContain('Sarah Chen');
+    expect(typeof generatedPrompt).toBe('string');
+    expect(generatedPrompt).toContain('Sarah Chen');
   });
 
   it('includes gender context when gender is provided', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: 'Male',
       ageRange: null,
@@ -29,11 +29,11 @@ describe('buildPersonalizerPrompt', () => {
       maritalStatus: null,
       humour: false,
     });
-    expect(result).toContain('Gender: Male');
+    expect(generatedPrompt).toContain('Gender: Male');
   });
 
   it('omits gender context when gender is null', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -42,11 +42,11 @@ describe('buildPersonalizerPrompt', () => {
       maritalStatus: null,
       humour: false,
     });
-    expect(result).not.toContain('Gender:');
+    expect(generatedPrompt).not.toContain('Gender:');
   });
 
   it('includes humour instruction when humour is true', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -56,12 +56,12 @@ describe('buildPersonalizerPrompt', () => {
       humour: true,
       intent: null,
     });
-    expect(result).toContain('self-aware about cold-messaging');
-    expect(result).toContain('Never use a meme');
+    expect(generatedPrompt).toContain('self-aware about cold-messaging');
+    expect(generatedPrompt).toContain('Never use a meme');
   });
 
   it('omits humour instruction when humour is false', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -71,7 +71,7 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: null,
     });
-    expect(result).not.toContain('self-aware about cold-messaging');
+    expect(generatedPrompt).not.toContain('self-aware about cold-messaging');
   });
 
   it('throws when prospectInfo is missing', () => {
@@ -90,7 +90,7 @@ describe('buildPersonalizerPrompt', () => {
   });
 
   it('includes all provided demographic context fields', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: 'Female',
       ageRange: '26–35',
@@ -100,15 +100,15 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: null,
     });
-    expect(result).toContain('Gender: Female');
-    expect(result).toContain('Age range: 26–35');
-    expect(result).toContain('Country: India');
-    expect(result).toContain('Profession: Head of Growth');
-    expect(result).toContain('Marital status: Single');
+    expect(generatedPrompt).toContain('Gender: Female');
+    expect(generatedPrompt).toContain('Age range: 26–35');
+    expect(generatedPrompt).toContain('Country: India');
+    expect(generatedPrompt).toContain('Profession: Head of Growth');
+    expect(generatedPrompt).toContain('Marital status: Single');
   });
 
   it('always ends with the no-formatting instruction', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -118,13 +118,13 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: null,
     });
-    expect(result).toContain(
+    expect(generatedPrompt).toContain(
       'Return ONLY the message. No subject line, no preamble, no explanation. No markdown. No bold.',
     );
   });
 
   it('includes intent block when intent is provided', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -134,11 +134,11 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: 'Selling a new CRM platform',
     });
-    expect(result).toContain('Your reason for reaching out: Selling a new CRM platform');
+    expect(generatedPrompt).toContain('Your reason for reaching out: Selling a new CRM platform');
   });
 
   it('omits intent block when intent is null', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -148,11 +148,11 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: null,
     });
-    expect(result).not.toContain('Your reason for reaching out:');
+    expect(generatedPrompt).not.toContain('Your reason for reaching out:');
   });
 
   it('includes banned phrases list in output', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
       ageRange: null,
@@ -162,12 +162,12 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: null,
     });
-    expect(result).toContain('I hope this message finds you well');
-    expect(result).toContain('synergy');
+    expect(generatedPrompt).toContain('I hope this message finds you well');
+    expect(generatedPrompt).toContain('synergy');
   });
 
   it('includes prospect name in output prompt when provided', () => {
-    const result = buildPersonalizerPrompt({
+    const generatedPrompt = buildPersonalizerPrompt({
       name: 'Sarah Chen',
       prospectInfo: VALID_PROSPECT_INFO,
       gender: null,
@@ -178,7 +178,7 @@ describe('buildPersonalizerPrompt', () => {
       humour: false,
       intent: null,
     });
-    expect(result).toContain('Prospect Name: Sarah Chen');
-    expect(result).toContain('address them by their first name');
+    expect(generatedPrompt).toContain('Prospect Name: Sarah Chen');
+    expect(generatedPrompt).toContain('address them by their first name');
   });
 });

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { getUserHistory, updateHistorySavedStatus, deleteHistoryItem, clearUserHistory } from '../../services/history.js';
@@ -8,21 +8,48 @@ import { Sidebar } from '../../components/Sidebar.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
 import { appendToSheet, getSheetUrl } from '../../services/sheets.js';
-import { FiCopy, FiCheck, FiSave, FiLoader, FiExternalLink, FiAlertCircle, FiTrash2, FiLogOut } from 'react-icons/fi';
+import { FiAlertCircle, FiTrash2, FiLogOut } from 'react-icons/fi';
 import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
+import { HistoryItemCard } from './components/HistoryItemCard.jsx';
 
+const COPY_FEEDBACK_DURATION_MS = 2000;
+const SAVE_ERROR_RESET_DELAY_MS = 3000;
+const HISTORY_RETENTION_DAYS = 30;
+
+/**
+ * Builds the initial savingIds map from already-saved history items.
+ *
+ * @param {Array<Object>} historyData - Array of history records
+ * @returns {Object} Map of { [id]: 'saved' } for already-saved items
+ */
+function buildInitialSavedMap(historyData) {
+  const initialSaved = {};
+  for (const entry of historyData) {
+    if (entry.isSavedToLogs) {
+      initialSaved[entry.id] = 'saved';
+    }
+  }
+  return initialSaved;
+}
+
+/**
+ * HistoryPage — displays the user's generated message history with
+ * copy, save-to-logs, delete, and clear-all actions.
+ *
+ * @returns {JSX.Element}
+ */
 export function HistoryPage() {
   const { currentUser, signOut } = useAuth();
   const [history, setHistory] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [savingIds, setSavingIds] = useState({}); // { [id]: 'saving' | 'saved' | 'error' }
+  const [savingIds, setSavingIds] = useState({});
   const [copiedId, setCopiedId] = useState(null);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
-  const sheetUrl = getSheetUrl();
+  const [isShowingSignOutConfirm, setIsShowingSignOutConfirm] = useState(false);
+  const sheetUrl = useMemo(() => getSheetUrl(), []);
 
   useEffect(() => {
     async function fetchData() {
@@ -32,84 +59,73 @@ export function HistoryPage() {
             getUserHistory(currentUser.uid),
             getUserProfile(currentUser.uid)
           ]);
-          
+
           setHistory(historyData);
           setUserProfile(profileData);
-          
-          // Pre-populate savingIds with already saved items from Firestore
-          const initialSaved = {};
-          historyData.forEach(item => {
-            if (item.isSavedToLogs) {
-              initialSaved[item.id] = 'saved';
-            }
-          });
-          setSavingIds(initialSaved);
-        } catch (error) {
-          console.error("Failed to load history or profile", error);
+          setSavingIds(buildInitialSavedMap(historyData));
+        } catch {
+          // Data fetch failed; page will render empty state
         }
       } else {
         setHistory([]);
         setUserProfile(null);
       }
-      setLoading(false);
+      setIsLoading(false);
     }
-    
+
     fetchData();
   }, [currentUser]);
 
-  const handleCopy = (id, text) => {
+  const handleCopy = useCallback((id, text) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+    setTimeout(() => setCopiedId(null), COPY_FEEDBACK_DURATION_MS);
+  }, []);
 
-  const handleSaveToLogs = async (item) => {
-    if (savingIds[item.id] === 'saved' || savingIds[item.id] === 'saving') return;
-    
-    setSavingIds(prev => ({ ...prev, [item.id]: 'saving' }));
+  const handleSaveToLogs = useCallback(async (historyItem) => {
+    if (savingIds[historyItem.id] === 'saved' || savingIds[historyItem.id] === 'saving') return;
+
+    setSavingIds(prev => ({ ...prev, [historyItem.id]: 'saving' }));
     try {
       await appendToSheet({
-        prospectName: item.formData.name,
-        message: item.generatedMessage,
-        ...item.formData
+        prospectName: historyItem.formData.name,
+        message: historyItem.generatedMessage,
+        ...historyItem.formData
       }, userProfile?.sheetsUrl);
-      
-      // Persist to Firestore
-      await updateHistorySavedStatus(item.id, true);
-      
-      setSavingIds(prev => ({ ...prev, [item.id]: 'saved' }));
-    } catch (error) {
-      console.error("Failed to save to logs", error);
-      setSavingIds(prev => ({ ...prev, [item.id]: 'error' }));
-      setTimeout(() => setSavingIds(prev => ({ ...prev, [item.id]: null })), 3000);
-    }
-  };
 
-  const handleDeleteItem = async (id) => {
+      await updateHistorySavedStatus(historyItem.id, true);
+
+      setSavingIds(prev => ({ ...prev, [historyItem.id]: 'saved' }));
+    } catch {
+      setSavingIds(prev => ({ ...prev, [historyItem.id]: 'error' }));
+      setTimeout(() => setSavingIds(prev => ({ ...prev, [historyItem.id]: null })), SAVE_ERROR_RESET_DELAY_MS);
+    }
+  }, [savingIds, userProfile]);
+
+  const handleDeleteItem = useCallback(async (id) => {
     try {
       await deleteHistoryItem(id);
-      setHistory(prev => prev.filter(item => item.id !== id));
-    } catch (error) {
-      console.error("Failed to delete item", error);
+      setHistory(prev => prev.filter(entry => entry.id !== id));
+    } catch {
+      // Delete failed silently — item remains in list
     }
-  };
+  }, []);
 
-  const handleClearAll = async () => {
+  const handleClearAll = useCallback(async () => {
     if (!currentUser) return;
     try {
       await clearUserHistory(currentUser.uid);
       setHistory([]);
       setIsConfirmingClear(false);
-    } catch (error) {
-      console.error("Failed to clear history", error);
+    } catch {
+      // Clear failed silently
     }
-  };
+  }, [currentUser]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-      
-      {/* Sidebar */}
+
       <Sidebar userProfile={userProfile} sheetUrl={sheetUrl} />
 
       <main className="flex-1 flex flex-col p-6 md:p-12 h-screen overflow-y-auto">
@@ -119,23 +135,23 @@ export function HistoryPage() {
               Your Generation History
             </h2>
             <p className="text-[10px] font-light text-gray-500 uppercase tracking-widest flex items-center gap-2">
-              <FiAlertCircle size={10} /> History is automatically cleared every 30 days.
+              <FiAlertCircle size={10} /> History is automatically cleared every {HISTORY_RETENTION_DAYS} days.
             </p>
           </div>
-          
+
           <div className="flex flex-col items-end gap-4">
             {currentUser ? (
               <div className="flex items-center gap-4">
                 <span className="text-sm font-light text-gray-600">{currentUser.email}</span>
-                <button 
-                  onClick={() => setShowSignOutConfirm(true)}
+                <button
+                  onClick={() => setIsShowingSignOutConfirm(true)}
                   className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
                 >
                   <span className="relative z-10">Sign Out</span>
                 </button>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
               >
@@ -154,7 +170,6 @@ export function HistoryPage() {
           </div>
         </header>
 
-        {/* Clear History Confirmation Modal */}
         <ConfirmationModal
           isOpen={isConfirmingClear}
           onClose={() => setIsConfirmingClear(false)}
@@ -166,13 +181,12 @@ export function HistoryPage() {
           icon={<FiTrash2 className="text-4xl text-red-500" />}
         />
 
-        {/* Sign Out Confirmation Modal */}
         <ConfirmationModal
-          isOpen={showSignOutConfirm}
-          onClose={() => setShowSignOutConfirm(false)}
+          isOpen={isShowingSignOutConfirm}
+          onClose={() => setIsShowingSignOutConfirm(false)}
           onConfirm={() => {
             signOut();
-            setShowSignOutConfirm(false);
+            setIsShowingSignOutConfirm(false);
           }}
           title="Sign Out?"
           message="Are you sure you want to sign out of your OutreachAI account?"
@@ -184,18 +198,18 @@ export function HistoryPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
           className="flex-1"
         >
-          {loading ? (
+          {isLoading ? (
             <div className="h-64 flex items-center justify-center">
               <LoadingSpinner />
             </div>
           ) : !currentUser ? (
             <div className="glass-panel rounded-3xl p-12 text-center flex flex-col items-center gap-4">
               <h3 className="text-2xl font-bold font-heading text-gray-800">Sign in to view history</h3>
-              <p className="text-gray-600 font-light max-w-md">Your generated messages will be saved securely to your account for 30 days.</p>
-              <button 
+              <p className="text-gray-600 font-light max-w-md">Your generated messages will be saved securely to your account for {HISTORY_RETENTION_DAYS} days.</p>
+              <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="liquid-button mt-4 bg-white/60 backdrop-blur-sm border border-white shadow-sm text-sm font-semibold font-subheading px-8 py-3 rounded-full transition-all z-0"
               >
@@ -206,7 +220,7 @@ export function HistoryPage() {
             <div className="glass-panel rounded-3xl p-12 text-center flex flex-col items-center gap-4">
               <h3 className="text-2xl font-bold font-heading text-gray-800">No history yet</h3>
               <p className="text-gray-600 font-light max-w-md">Go to the workspace to generate your first personalized message!</p>
-              <Link 
+              <Link
                 to="/"
                 className="liquid-button mt-4 bg-white/60 backdrop-blur-sm border border-white shadow-sm text-sm font-semibold font-subheading px-8 py-3 rounded-full transition-all z-0"
               >
@@ -215,154 +229,21 @@ export function HistoryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-12">
-              {history.map((item, index) => (
-                <motion.div 
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.05)' }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="glass-panel rounded-3xl p-6 flex flex-col gap-4 border border-white/60 shadow-sm relative overflow-hidden"
-                >
-                  <div className="flex justify-between items-start mb-2 border-b border-white/40 pb-4">
-                    <div>
-                      <h3 className="text-lg font-bold font-heading text-gray-900">{item.formData.name || 'Unknown Prospect'}</h3>
-                      <p className="text-xs font-light text-gray-500 mt-1 uppercase tracking-wider">
-                        {item.formData.buyerPersona || item.formData.profession || 'Role Not Specified'}
-                        {(item.formData.industry || item.formData.country) ? ` • ${item.formData.industry || item.formData.country}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Just now'}
-                      </span>
-                      <div className="flex items-center gap-2 border-l border-white/40 pl-3 ml-1">
-                        <motion.button 
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleCopy(item.id, item.generatedMessage)}
-                          className={`transition-colors ${copiedId === item.id ? 'text-green-500' : 'text-gray-400 hover:text-gray-900'}`}
-                          title="Copy to clipboard"
-                        >
-                          {copiedId === item.id ? <FiCheck size={16} /> : <FiCopy size={16} />}
-                        </motion.button>
-                        <AnimatePresence mode="wait">
-                          {deletingId !== item.id ? (
-                            <motion.button 
-                              key="del-init"
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.8 }}
-                              whileHover={{ scale: 1.1, color: '#ef4444' }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => setDeletingId(item.id)}
-                              className="text-gray-400 transition-colors"
-                              title="Delete"
-                            >
-                              <FiTrash2 size={16} />
-                            </motion.button>
-                          ) : (
-                            <motion.div
-                              key="del-confirm"
-                              initial={{ opacity: 0, x: 5 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0, x: 5 }}
-                              className="flex items-center gap-2"
-                            >
-                              <button 
-                                onClick={() => setDeletingId(null)}
-                                className="text-[10px] font-semibold text-gray-400 hover:text-gray-900 uppercase"
-                              >
-                                No
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase underline underline-offset-2"
-                              >
-                                Yes
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {item.formData.outreachChannel && (
-                      <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-bold text-gray-600 uppercase tracking-wide">
-                        📨 {item.formData.outreachChannel}
-                      </span>
-                    )}
-                    {item.formData.companySize && (
-                      <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-bold text-gray-600 uppercase tracking-wide">
-                        🏢 {item.formData.companySize}
-                      </span>
-                    )}
-                    {item.formData.tone && (
-                      <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-bold text-gray-600 uppercase tracking-wide">
-                        🎙 {item.formData.tone}
-                      </span>
-                    )}
-                    {item.formData.intent && (
-                      <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-bold text-gray-600 uppercase tracking-wide">
-                        🎯 {item.formData.intent.substring(0, 20)}
-                      </span>
-                    )}
-                    {item.formData.humour && (
-                      <span className="px-3 py-1 bg-[#E9D9FA]/50 rounded-full text-[10px] font-bold text-gray-700 uppercase tracking-wide">
-                        ✨ Witty Hook
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="bg-white/30 rounded-2xl p-4 mt-2 max-h-48 overflow-y-auto custom-scrollbar border border-white/20">
-                    <p className="text-sm font-light text-gray-800 whitespace-pre-wrap leading-relaxed">{item.generatedMessage}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-2 pt-4 border-t border-white/40">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleSaveToLogs(item)}
-                      disabled={savingIds[item.id] === 'saving' || savingIds[item.id] === 'saved'}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold font-subheading transition-all ${
-                        savingIds[item.id] === 'saved' 
-                          ? 'bg-green-100 text-green-700 border border-green-200' 
-                          : savingIds[item.id] === 'error'
-                          ? 'bg-red-100 text-red-700 border border-red-200'
-                          : 'bg-white/40 text-gray-700 border border-white/60 hover:bg-white/60'
-                      }`}
-                    >
-                      {savingIds[item.id] === 'saving' ? (
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
-                          <FiLoader />
-                        </motion.div>
-                      ) : savingIds[item.id] === 'saved' ? (
-                        <FiCheck />
-                      ) : savingIds[item.id] === 'error' ? (
-                        <FiAlertCircle />
-                      ) : (
-                        <FiSave />
-                      )}
-                      <span>
-                        {savingIds[item.id] === 'saving' ? 'Saving...' : 
-                         savingIds[item.id] === 'saved' ? 'Saved' : 
-                         savingIds[item.id] === 'error' ? 'Failed' : 'Save to Logs'}
-                      </span>
-                    </motion.button>
-
-                    <motion.a
-                      href={userProfile?.viewUrl || sheetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      whileHover={{ x: 2 }}
-                      className="text-[10px] font-bold text-gray-400 hover:text-gray-800 flex items-center gap-1 uppercase"
-                    >
-                      View Log <FiExternalLink size={10} />
-                    </motion.a>
-                  </div>
-                </motion.div>
+              {history.map((historyItem, index) => (
+                <HistoryItemCard
+                  key={historyItem.id}
+                  historyItem={historyItem}
+                  index={index}
+                  copiedId={copiedId}
+                  savingIds={savingIds}
+                  deletingId={deletingId}
+                  onCopy={handleCopy}
+                  onDeleteInit={setDeletingId}
+                  onDeleteCancel={() => setDeletingId(null)}
+                  onDeleteConfirm={handleDeleteItem}
+                  onSave={handleSaveToLogs}
+                  viewLogUrl={userProfile?.viewUrl || sheetUrl}
+                />
               ))}
             </div>
           )}

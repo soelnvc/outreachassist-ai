@@ -1,26 +1,38 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signOut as firebaseSignOut 
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut
 } from 'firebase/auth';
 import { auth } from '../services/firebase.js';
 
 const AuthContext = createContext({});
 
+/**
+ * Custom hook to access the AuthContext value.
+ *
+ * @returns {{ currentUser: Object|null, signInWithGoogle: Function, signOut: Function }}
+ */
 export function useAuth() {
   return useContext(AuthContext);
 }
 
+/**
+ * Provides Firebase authentication state and actions to the component tree.
+ *
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - Child components to wrap
+ * @returns {JSX.Element}
+ */
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      setLoading(false);
+      setIsLoading(false);
     });
 
     return unsubscribe;
@@ -43,7 +55,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 }

@@ -14,30 +14,30 @@ const buildMockResponse = (text) => ({
 describe('parseApiResponse', () => {
   it('returns clean message from valid API response', () => {
     const raw = buildMockResponse('Hey Sarah, noticed your work at Acme Corp.');
-    const result = parseApiResponse(raw);
-    expect(result).toEqual({
+    const parsedResult = parseApiResponse(raw);
+    expect(parsedResult).toEqual({
       message: 'Hey Sarah, noticed your work at Acme Corp.',
     });
   });
 
   it('strips preamble phrases like "Here is your message:"', () => {
     const raw = buildMockResponse('Here is your message: Hey Sarah, great work.');
-    const result = parseApiResponse(raw);
-    expect(result.message).toBe('Hey Sarah, great work.');
+    const parsedResult = parseApiResponse(raw);
+    expect(parsedResult.message).toBe('Hey Sarah, great work.');
   });
 
   it('strips case-insensitive preamble "Sure, here\'s your message:"', () => {
     const raw = buildMockResponse(
       "Sure, here's your personalized message: Hello there.",
     );
-    const result = parseApiResponse(raw);
-    expect(result.message).toBe('Hello there.');
+    const parsedResult = parseApiResponse(raw);
+    expect(parsedResult.message).toBe('Hello there.');
   });
 
   it('trims leading and trailing whitespace', () => {
     const raw = buildMockResponse('  \n  Hello world  \n  ');
-    const result = parseApiResponse(raw);
-    expect(result.message).toBe('Hello world');
+    const parsedResult = parseApiResponse(raw);
+    expect(parsedResult.message).toBe('Hello world');
   });
 
   it('throws on malformed API response shape — null', () => {

@@ -15,39 +15,12 @@ const BANNED_PHRASES = [
 ];
 
 /**
- * Builds the prompt string to send to Gemini based on the collected user inputs
- * and the logged-in user's profile data.
- * 
+ * Builds the firmographic context block from prospect data fields.
+ *
  * @param {Object} prospectData - The collected form data
- * @param {string} [prospectData.name] - Prospect name & title
- * @param {string} prospectData.prospectInfo - Company context / Recent news (required)
- * @param {string} [prospectData.intent] - Value proposition / Ask
- * @param {string|null} prospectData.outreachChannel - Selected outreach channel
- * @param {string|null} prospectData.companySize - Selected company size
- * @param {string|null} prospectData.tone - Selected tone
- * @param {string|null} prospectData.industry - Selected industry
- * @param {string|null} prospectData.buyerPersona - Selected buyer persona
- * @param {boolean} prospectData.humour - Whether to include witty hook instruction
- * @param {Object} [userProfile] - The logged-in user's profile data
- * @returns {string} The formatted prompt
+ * @returns {string} Formatted context block or empty string
  */
-export function buildPersonalizerPrompt(prospectData, userProfile) {
-  if (
-    !prospectData.prospectInfo ||
-    prospectData.prospectInfo.trim().length < MIN_PROSPECT_LENGTH
-  ) {
-    throw new Error('prospectInfo is required and must be at least 20 characters.');
-  }
-
-  const sanitizedInfo = sanitizeInput(prospectData.prospectInfo);
-  const sanitizedIntent = prospectData.intent ? sanitizeInput(prospectData.intent) : '';
-  const sanitizedName = prospectData.name ? sanitizeInput(prospectData.name) : '';
-
-  const nameBlock = sanitizedName ? `\nProspect Name & Title: ${sanitizedName}\n` : '';
-  const intentBlock = sanitizedIntent
-    ? `\nValue Proposition & Ask: ${sanitizedIntent}\n`
-    : '';
-
+function buildContextBlock(prospectData) {
   const contextLines = [];
   if (prospectData.outreachChannel) {
     contextLines.push(`- Outreach Channel: ${prospectData.outreachChannel}`);
@@ -62,25 +35,73 @@ export function buildPersonalizerPrompt(prospectData, userProfile) {
     contextLines.push(`- Buyer Persona: ${prospectData.buyerPersona}`);
   }
 
-  const tone = prospectData.tone || 'Professional';
+  return contextLines.length > 0
+    ? `\nFirmographics & Strategy:\n${contextLines.join('\n')}\n`
+    : '';
+}
 
-  const contextBlock =
-    contextLines.length > 0
-      ? `\nFirmographics & Strategy:\n${contextLines.join('\n')}\n`
-      : '';
+/**
+ * Builds the sender profile block from user profile data.
+ *
+ * @param {Object|null} userProfile - The logged-in user's profile data
+ * @returns {string} Formatted sender block or empty string
+ */
+function buildUserProfileBlock(userProfile) {
+  const hasProfileDetails = userProfile
+    && (userProfile.name || userProfile.work || userProfile.about || userProfile.company);
+
+  if (!hasProfileDetails) return '';
+
+  let block = '\nABOUT YOU (The Sender):\nUse the following information to establish credibility. Keep your introduction brief and relevant to the prospect\'s pain points.\n';
+  if (userProfile.name) block += `- Your Name: ${userProfile.name}\n`;
+  if (userProfile.company) block += `- Your Company Name: ${userProfile.company}\n`;
+  if (userProfile.work) block += `- Your Role/Title: ${userProfile.work}\n`;
+  if (userProfile.about) block += `- Your Value: ${userProfile.about}\n`;
+  return block;
+}
+
+/**
+ * Builds the prompt string to send to Gemini based on the collected user inputs
+ * and the logged-in user's profile data.
+ *
+ * @param {Object} prospectData - The collected form data
+ * @param {string} [prospectData.name] - Prospect name & title
+ * @param {string} prospectData.prospectInfo - Company context / Recent news (required)
+ * @param {string} [prospectData.intent] - Value proposition / Ask
+ * @param {string|null} prospectData.outreachChannel - Selected outreach channel
+ * @param {string|null} prospectData.companySize - Selected company size
+ * @param {string|null} prospectData.tone - Selected tone
+ * @param {string|null} prospectData.industry - Selected industry
+ * @param {string|null} prospectData.buyerPersona - Selected buyer persona
+ * @param {boolean} prospectData.humour - Whether to include witty hook instruction
+ * @param {Object} [userProfile] - The logged-in user's profile data
+ * @returns {string} The formatted prompt
+ * @throws {Error} If prospectInfo is missing or too short
+ */
+export function buildPersonalizerPrompt(prospectData, userProfile) {
+  const isProspectInfoInvalid = !prospectData.prospectInfo
+    || prospectData.prospectInfo.trim().length < MIN_PROSPECT_LENGTH;
+
+  if (isProspectInfoInvalid) {
+    throw new Error('prospectInfo is required and must be at least 20 characters.');
+  }
+
+  const sanitizedInfo = sanitizeInput(prospectData.prospectInfo);
+  const sanitizedIntent = prospectData.intent ? sanitizeInput(prospectData.intent) : '';
+  const sanitizedName = prospectData.name ? sanitizeInput(prospectData.name) : '';
+
+  const nameBlock = sanitizedName ? `\nProspect Name & Title: ${sanitizedName}\n` : '';
+  const intentBlock = sanitizedIntent
+    ? `\nValue Proposition & Ask: ${sanitizedIntent}\n`
+    : '';
+
+  const tone = prospectData.tone || 'Professional';
+  const contextBlock = buildContextBlock(prospectData);
+  const userProfileBlock = buildUserProfileBlock(userProfile);
 
   const humourBlock = prospectData.humour
     ? `\nWITTY HOOK INSTRUCTION:\nAdd a brief, self-aware, or clever opening hook that breaks the ice. It should acknowledge the cold outreach nature but in a smart, non-cringey way. Example: "I know you probably get 100 pitches a day, so I'll skip the fluff." Make it specific to their industry if possible.\n`
     : '';
-
-  let userProfileBlock = '';
-  if (userProfile && (userProfile.name || userProfile.work || userProfile.about || userProfile.company)) {
-    userProfileBlock = `\nABOUT YOU (The Sender):\nUse the following information to establish credibility. Keep your introduction brief and relevant to the prospect's pain points.\n`;
-    if (userProfile.name) userProfileBlock += `- Your Name: ${userProfile.name}\n`;
-    if (userProfile.company) userProfileBlock += `- Your Company Name: ${userProfile.company}\n`;
-    if (userProfile.work) userProfileBlock += `- Your Role/Title: ${userProfile.work}\n`;
-    if (userProfile.about) userProfileBlock += `- Your Value: ${userProfile.about}\n`;
-  }
 
   return `You are an elite B2B Sales Copywriter and Strategist. Your goal is to write a highly converting, personalized cold outreach message. This message must cut through the noise, feel inherently human, and clearly articulate value.
 

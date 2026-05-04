@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom';
 import { FiFileText, FiAlertTriangle, FiUserCheck, FiZap, FiArrowLeft } from 'react-icons/fi';
 import { Sidebar } from '../../components/Sidebar.jsx';
 
+/**
+ * TermsPage — displays the OutreachAI Terms of Service, covering AI usage,
+ * user responsibility, and professional conduct.
+ *
+ * @returns {JSX.Element}
+ */
 export function TermsPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">

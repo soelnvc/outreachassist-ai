@@ -1,53 +1,56 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { getUserProfile, saveUserProfile } from '../services/userProfile.js';
 import { FiAlertTriangle, FiCheck, FiX, FiShield } from 'react-icons/fi';
 
+/**
+ * Route guard that checks whether the current user has accepted the Terms of Service.
+ * If not, displays an overlay requiring acceptance before granting access to children.
+ *
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - Child components to render after TOS acceptance
+ * @returns {JSX.Element}
+ */
 export function TOSGuard({ children }) {
   const { currentUser } = useAuth();
   const [hasAccepted, setHasAccepted] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [showRejection, setShowRejection] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isShowingRejection, setIsShowingRejection] = useState(false);
 
   useEffect(() => {
     async function checkTOS() {
       try {
         if (currentUser) {
           const profile = await getUserProfile(currentUser.uid);
-          if (profile && profile.acceptedTOS) {
-            setHasAccepted(true);
-          } else {
-            setHasAccepted(false);
-          }
+          setHasAccepted(!!(profile && profile.acceptedTOS));
         } else {
           setHasAccepted(true); // Don't block guests
         }
-      } catch (error) {
-        console.error("TOS Check error:", error);
+      } catch {
         setHasAccepted(true); // Default to accepted on error to avoid lockout
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     }
     checkTOS();
   }, [currentUser]);
 
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     if (!currentUser) return;
     try {
       await saveUserProfile(currentUser.uid, { acceptedTOS: true });
       setHasAccepted(true);
-    } catch (error) {
-      console.error("Failed to save TOS acceptance", error);
+    } catch {
+      // Acceptance failure is non-critical; user can retry
     }
-  };
+  }, [currentUser]);
 
-  const handleReject = () => {
-    setShowRejection(true);
-  };
+  const handleReject = useCallback(() => {
+    setIsShowingRejection(true);
+  }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[#EAE6F5] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -58,10 +61,10 @@ export function TOSGuard({ children }) {
     );
   }
 
-  if (showRejection) {
+  if (isShowingRejection) {
     return (
       <div className="fixed inset-0 z-[9999] bg-[#EAE6F5] flex items-center justify-center p-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full glass-panel rounded-3xl p-10 text-center border-red-200 shadow-2xl"
@@ -71,13 +74,13 @@ export function TOSGuard({ children }) {
           </div>
           <h2 className="text-2xl font-bold font-heading text-gray-900 mb-4">Access Restricted</h2>
           <p className="text-gray-600 font-light mb-8 leading-relaxed">
-            To ensure the safe and ethical use of AI, all users must agree to our Terms of Service before accessing OutreachAI. 
+            To ensure the safe and ethical use of AI, all users must agree to our Terms of Service before accessing OutreachAI.
             <br /><br />
             Please accept the terms to unlock your workspace.
           </p>
           <div className="flex flex-col gap-3">
-            <button 
-              onClick={() => setShowRejection(false)}
+            <button
+              onClick={() => setIsShowingRejection(false)}
               className="liquid-button bg-[#A78BFA] text-white px-8 py-3 rounded-full font-semibold"
             >
               Back to Terms
@@ -93,7 +96,7 @@ export function TOSGuard({ children }) {
       <AnimatePresence>
         {!hasAccepted && currentUser && (
           <div className="fixed inset-0 z-[9000] bg-gray-900/40 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
@@ -103,10 +106,10 @@ export function TOSGuard({ children }) {
                 <FiShield className="text-2xl text-[#A78BFA]" />
                 <h2 className="text-xl font-bold font-heading">Terms of Service Agreement</h2>
               </div>
-              
+
               <div className="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6">
                 <p className="text-gray-700 font-medium italic">Before we start, please review our AI safety guidelines:</p>
-                
+
                 <section className="space-y-2">
                   <h4 className="font-bold text-gray-900 flex items-center gap-2">
                     <FiCheck className="text-green-500" /> AI Responsibility
@@ -140,13 +143,13 @@ export function TOSGuard({ children }) {
                   By clicking Accept, you agree to our full <strong>Terms of Service</strong> and <strong>Privacy Policy</strong>.
                 </p>
                 <div className="flex gap-4 w-full sm:w-auto">
-                  <button 
+                  <button
                     onClick={handleReject}
                     className="flex-1 sm:flex-none px-8 py-3 rounded-full text-sm font-semibold text-gray-500 border border-white/60 hover:bg-white/40 transition-all"
                   >
                     Reject
                   </button>
-                  <button 
+                  <button
                     onClick={handleAccept}
                     className="flex-1 sm:flex-none liquid-button bg-[#A78BFA] text-white px-10 py-3 rounded-full font-semibold shadow-lg"
                   >

@@ -1,18 +1,28 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiCopy, FiCheck, FiSave, FiLoader, FiExternalLink, FiAlertCircle } from 'react-icons/fi';
 
+const COPY_FEEDBACK_DURATION_MS = 2000;
+
 /**
  * Renders the generated message output card with copy and save actions.
+ *
+ * @param {Object} props
+ * @param {string} props.message - The generated message text
+ * @param {Function} props.onCopy - Callback triggered when copy is clicked
+ * @param {Function} props.onSave - Callback triggered when save is clicked
+ * @param {string|null} props.sheetStatus - Current save status ('saving'|'saved'|'error'|null)
+ * @param {string} props.sheetUrl - URL to the Google Sheet
+ * @returns {JSX.Element}
  */
 export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
-  const [copied, setCopied] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy = useCallback(() => {
     onCopy();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), COPY_FEEDBACK_DURATION_MS);
+  }, [onCopy]);
 
   return (
     <article className="glass-panel rounded-2xl p-8 mt-6 border border-white/60 shadow-sm">
@@ -32,8 +42,8 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
           whileTap={{ scale: 0.98 }}
           className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-8 py-3 text-sm font-semibold font-subheading text-gray-800 hover:bg-white transition-all shadow-sm"
         >
-          {copied ? <FiCheck className="text-green-500" /> : <FiCopy />}
-          <span>{copied ? 'Copied!' : 'Copy'}</span>
+          {isCopied ? <FiCheck className="text-green-500" /> : <FiCopy />}
+          <span>{isCopied ? 'Copied!' : 'Copy'}</span>
         </motion.button>
 
         <SaveButton
@@ -55,7 +65,7 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
 
       <AnimatePresence>
         {sheetStatus === 'error' && (
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -71,6 +81,11 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
 
 /**
  * Renders the save-to-sheets button with loading and success states.
+ *
+ * @param {Object} props
+ * @param {Function} props.onSave - Callback triggered on click
+ * @param {string|null} props.sheetStatus - Current save status
+ * @returns {JSX.Element}
  */
 function SaveButton({ onSave, sheetStatus }) {
   const isSaving = sheetStatus === 'saving';
@@ -95,7 +110,7 @@ function SaveButton({ onSave, sheetStatus }) {
       {isSaving ? (
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
         >
           <FiLoader />
         </motion.div>
@@ -106,7 +121,7 @@ function SaveButton({ onSave, sheetStatus }) {
       ) : (
         <FiSave />
       )}
-      
+
       <span>
         {isSaving ? 'Saving...' : isSaved ? 'Saved ✓' : isError ? 'Failed' : 'Save to Sheets'}
       </span>
