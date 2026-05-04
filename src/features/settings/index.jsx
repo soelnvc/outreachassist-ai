@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { getUserProfile, saveUserProfile } from '../../services/userProfile.js';
+import { getUserHistory } from '../../services/history.js';
 import { Sidebar } from '../../components/Sidebar.jsx';
 import { AuthModal } from '../../components/AuthModal.jsx';
 import { ConfirmationModal } from '../../components/ConfirmationModal.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
 import { getSheetUrl } from '../../services/sheets.js';
-import { FiUser, FiClock, FiLink, FiLogOut, FiExternalLink, FiChevronRight, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiClock, FiLink, FiLogOut, FiExternalLink, FiChevronRight, FiCheckCircle, FiAlertCircle, FiMessageSquare } from 'react-icons/fi';
 
 export function SettingsPage() {
   const { currentUser, signOut } = useAuth();
@@ -17,6 +18,7 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
+  const [history, setHistory] = useState([]);
   const sheetUrl = getSheetUrl();
 
   const [profile, setProfile] = useState({
@@ -29,17 +31,28 @@ export function SettingsPage() {
   });
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadData() {
       if (currentUser) {
         setProfile(prev => ({ ...prev, name: currentUser.displayName || '' }));
-        const data = await getUserProfile(currentUser.uid);
-        if (data) {
-          setProfile(prev => ({ ...prev, ...data }));
+        try {
+          const [profileData, historyData] = await Promise.all([
+            getUserProfile(currentUser.uid),
+            getUserHistory(currentUser.uid)
+          ]);
+          
+          if (profileData) {
+            setProfile(prev => ({ ...prev, ...profileData }));
+          }
+          if (historyData) {
+            setHistory(historyData.slice(0, 3));
+          }
+        } catch (err) {
+          console.error("Failed to load settings data:", err);
         }
       }
       setLoading(false);
     }
-    loadProfile();
+    loadData();
   }, [currentUser]);
 
   const handleSave = async (e) => {
@@ -119,7 +132,7 @@ export function SettingsPage() {
               onClick={() => setIsAuthModalOpen(true)}
               className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-bold font-subheading px-5 py-2 rounded-full transition-all z-0"
             >
-              <span className="relative z-10">Login / Sign UP</span>
+              <span className="relative z-10">Login / Sign Up</span>
             </button>
           )}
         </header>
@@ -303,10 +316,37 @@ export function SettingsPage() {
                   </Link>
                 </div>
                 <p className="text-sm font-light text-gray-600 mb-6">
-                  Your last few generations are saved here. You can find everything in the main History tab.
+                  Your last 3 generations are shown below for quick reference.
                 </p>
-                <div className="bg-white/20 rounded-2xl p-6 border border-white/40 text-center italic text-gray-500 font-light">
-                  Quick access history preview coming soon. Visit the History page for full records.
+                <div className="flex flex-col gap-3">
+                  {history.length > 0 ? (
+                    history.map((item) => (
+                      <Link 
+                        key={item.id} 
+                        to="/history"
+                        className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 hover:bg-white/50 transition-all group"
+                      >
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <div className="w-10 h-10 bg-[#E0D0F5]/50 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <FiMessageSquare className="text-[#A78BFA]" />
+                          </div>
+                          <div className="flex flex-col overflow-hidden">
+                            <h4 className="font-bold text-gray-800 truncate text-sm">
+                              {item.formData?.name || 'Unknown Prospect'}
+                            </h4>
+                            <p className="text-[10px] text-gray-500 font-light truncate">
+                              {item.generatedMessage?.substring(0, 60)}...
+                            </p>
+                          </div>
+                        </div>
+                        <FiChevronRight className="text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all" />
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="bg-white/20 rounded-2xl p-6 border border-white/40 text-center italic text-gray-500 font-light">
+                      No recent activity found. Start generating in the workspace!
+                    </div>
+                  )}
                 </div>
               </motion.section>
 
@@ -345,31 +385,27 @@ export function SettingsPage() {
                     <FiChevronRight className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                   </motion.a>
                   
-                  <motion.div 
-                    onClick={() => window.location.href = '/guide'}
-                    whileHover={{ y: -4, backgroundColor: 'rgba(255, 255, 255, 0.5)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group cursor-pointer"
+                  <Link 
+                    to="/guide"
+                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-all hover:bg-white/50 hover:-translate-y-1 shadow-sm hover:shadow-md group"
                   >
                     <div>
                       <h4 className="font-bold text-gray-800">Documentation</h4>
                       <p className="text-xs text-gray-500">How to use OutreachAI</p>
                     </div>
                     <FiChevronRight className="text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  </motion.div>
+                  </Link>
                   
-                  <motion.div 
-                    onClick={() => window.location.href = '/privacy'}
-                    whileHover={{ y: -4, backgroundColor: 'rgba(255, 255, 255, 0.5)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-colors group cursor-pointer"
+                  <Link 
+                    to="/privacy"
+                    className="flex items-center justify-between p-4 bg-white/30 rounded-2xl border border-white/40 transition-all hover:bg-white/50 hover:-translate-y-1 shadow-sm hover:shadow-md group"
                   >
                     <div>
                       <h4 className="font-bold text-gray-800">Privacy Policy</h4>
                       <p className="text-xs text-gray-500">How we handle your data</p>
                     </div>
                     <FiChevronRight className="text-gray-400 group-hover:text-gray-900 transition-colors" />
-                  </motion.div>
+                  </Link>
                 </div>
               </motion.section>
 

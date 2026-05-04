@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { 
-  FiBook, 
+  FiBookOpen, 
   FiUser, 
   FiLayout, 
   FiDatabase, 
@@ -66,7 +67,7 @@ export function GuidePage() {
   };
 
   const sections = [
-    { id: 'overview', title: 'Overview', icon: <FiBook /> },
+    { id: 'overview', title: 'Overview', icon: <FiBookOpen /> },
     { id: 'profile', title: 'Profile Setup', icon: <FiUser /> },
     { id: 'workspace', title: 'Workspace', icon: <FiLayout /> },
     { id: 'sheets', title: 'Sheets Integration', icon: <FiDatabase /> },

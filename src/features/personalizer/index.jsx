@@ -164,7 +164,7 @@ export function PersonalizerPage() {
               onClick={() => setIsAuthModalOpen(true)}
               className="liquid-button bg-[#E0D0F5]/60 backdrop-blur-sm border border-white/60 shadow-sm text-sm font-semibold font-subheading px-5 py-2 rounded-full transition-all z-0"
             >
-              <span className="relative z-10">Login / Sign UP</span>
+              <span className="relative z-10">Login / Sign Up</span>
             </button>
           )}
         </header>
