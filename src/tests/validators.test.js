@@ -33,25 +33,25 @@ describe('validateProspectInput', () => {
   it('returns invalid when prospectInfo is empty', () => {
     const result = validateProspectInput({ prospectInfo: '' });
     expect(result.valid).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toBe('Please add a bit more about the prospect.');
   });
 
   it('returns invalid when prospectInfo is under 20 chars', () => {
     const result = validateProspectInput({ prospectInfo: 'Too short' });
     expect(result.valid).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toBe('Please add a bit more about the prospect.');
   });
 
   it('returns invalid when prospectInfo is only whitespace', () => {
     const result = validateProspectInput({ prospectInfo: '              ' });
     expect(result.valid).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toBe('Please add a bit more about the prospect.');
   });
 
   it('returns invalid when prospectInfo is missing entirely', () => {
     const result = validateProspectInput({});
     expect(result.valid).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toBe('Please add a bit more about the prospect.');
   });
 
   it('returns valid when intent is not provided', () => {
@@ -76,6 +76,31 @@ describe('validateProspectInput', () => {
       intent: 'Selling our new AI analytics tool',
     });
     expect(result).toEqual({ valid: true, error: null });
+  });
+
+  it('returns invalid for string of exactly 19 characters', () => {
+    const result = validateProspectInput({ prospectInfo: 'x'.repeat(19) });
+    expect(result.valid).toBe(false);
+  });
+
+  it('returns valid for string of exactly 20 characters', () => {
+    const result = validateProspectInput({ prospectInfo: 'x'.repeat(20) });
+    expect(result.valid).toBe(true);
+  });
+
+  it('returns invalid for null input', () => {
+    const result = validateProspectInput(null);
+    expect(result.valid).toBe(false);
+  });
+
+  it('returns invalid for undefined input', () => {
+    const result = validateProspectInput(undefined);
+    expect(result.valid).toBe(false);
+  });
+
+  it('returns invalid for number input instead of object', () => {
+    const result = validateProspectInput(12345);
+    expect(result.valid).toBe(false);
   });
 });
 

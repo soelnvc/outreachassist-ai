@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 /**
  * PersonalizerHeader — renders the welcome message and user auth actions for the personalizer page.
  *
@@ -14,7 +16,9 @@ export function PersonalizerHeader({
   onLoginClick,
   onSignOutClick
 }) {
-  const firstName = userProfile?.name?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'there';
+  const firstName = useMemo(() => 
+    userProfile?.name?.split(' ')[0] || currentUser?.displayName?.split(' ')[0] || 'there',
+  [userProfile, currentUser]);
 
   return (
     <header className="flex justify-between items-center mb-8">

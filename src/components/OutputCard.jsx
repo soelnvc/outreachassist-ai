@@ -38,11 +38,16 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
         <motion.button
           type="button"
           onClick={handleCopy}
+          aria-label={isCopied ? 'Message copied to clipboard' : 'Copy message to clipboard'}
           whileHover={{ y: -2, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-8 py-3 text-sm font-semibold font-subheading text-gray-800 hover:bg-white transition-all shadow-sm"
         >
-          {isCopied ? <FiCheck className="text-green-500" /> : <FiCopy />}
+          {isCopied ? (
+            <FiCheck className="text-green-500" aria-hidden="true" />
+          ) : (
+            <FiCopy aria-hidden="true" />
+          )}
           <span>{isCopied ? 'Copied!' : 'Copy'}</span>
         </motion.button>
 
@@ -56,10 +61,10 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ x: 2 }}
-          className="inline-flex items-center gap-1.5 text-xs font-bold font-subheading text-gray-500 hover:text-gray-900 underline underline-offset-4 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold font-subheading text-gray-700 hover:text-gray-900 underline underline-offset-4 transition-colors"
         >
           <span>View log</span>
-          <FiExternalLink size={12} />
+          <FiExternalLink size={12} aria-hidden="true" />
         </motion.a>
       </div>
 
@@ -69,7 +74,8 @@ export function OutputCard({ message, onCopy, onSave, sheetStatus, sheetUrl }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-sm text-red-500 mt-6 text-center font-medium"
+            role="alert"
+            className="text-sm text-red-600 mt-6 text-center font-medium"
           >
             Could not save to Sheets. Your message is still available above.
           </motion.p>
@@ -111,19 +117,20 @@ function SaveButton({ onSave, sheetStatus }) {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+          aria-hidden="true"
         >
           <FiLoader />
         </motion.div>
       ) : isSaved ? (
-        <FiCheck className="text-green-600" />
+        <FiCheck className="text-green-600" aria-hidden="true" />
       ) : isError ? (
-        <FiAlertCircle />
+        <FiAlertCircle aria-hidden="true" />
       ) : (
-        <FiSave />
+        <FiSave aria-hidden="true" />
       )}
 
       <span>
-        {isSaving ? 'Saving...' : isSaved ? 'Saved ✓' : isError ? 'Failed' : 'Save to Sheets'}
+        {isSaving ? 'Saving...' : isSaved ? 'Saved ✓' : isError ? 'Retry' : 'Save to Sheets'}
       </span>
     </motion.button>
   );

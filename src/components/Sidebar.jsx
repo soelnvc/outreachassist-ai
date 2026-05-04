@@ -68,7 +68,11 @@ export function Sidebar({ userProfile, sheetUrl }) {
                 <button
                   key={navItem.label}
                   onClick={handleLogClick}
-                  className="flex items-center gap-4 px-4 py-3 rounded-2xl text-gray-600 hover:text-gray-900 transition-all group w-full text-left"
+                  disabled={navItem.path === '#'}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group w-full text-left ${
+                    navItem.path === '#' ? 'opacity-50 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title={navItem.path === '#' ? 'Logs not configured in .env' : 'View logs in Google Sheets'}
                 >
                   <Icon className="text-lg group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-medium tracking-wide nav-link-underline pb-0.5 group-hover:after:scale-x-100">

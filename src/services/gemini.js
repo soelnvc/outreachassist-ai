@@ -1,5 +1,5 @@
 const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
-const MAX_OUTPUT_TOKENS = 500;
+const MAX_OUTPUT_TOKENS = 300;
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 /**
@@ -18,11 +18,14 @@ export async function callGemini(prompt, signal) {
     throw new Error('Gemini API key is not configured. Check your .env file.');
   }
 
-  const url = `${GEMINI_API_URL}?key=${apiKey}`;
+  const url = GEMINI_API_URL;
 
   const geminiResponse = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey 
+    },
     body: JSON.stringify({
       contents: [
         {

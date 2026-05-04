@@ -9,7 +9,7 @@ that sounds like a human wrote it for that specific person.
 - Prospect info free text input
 - Demographic context selectors (gender, age, country, profession, marital status)
 - Humour toggle for meme-style opening hooks
-- Google Sheets logging of all generated messages
+- Google Sheets logging of all generated messages (for team review, CRM syncing, and performance tracking)
 
 ## Run locally
 1. Clone the repo

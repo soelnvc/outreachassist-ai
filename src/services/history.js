@@ -30,8 +30,13 @@ export async function saveHistory(userId, formData, generatedMessage) {
     isSavedToLogs: false
   };
 
-  const docRef = await addDoc(collection(db, HISTORY_COLLECTION), docData);
-  return docRef.id;
+  try {
+    const docRef = await addDoc(collection(db, HISTORY_COLLECTION), docData);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error saving history:', error);
+    throw error;
+  }
 }
 
 /**
@@ -43,8 +48,13 @@ export async function saveHistory(userId, formData, generatedMessage) {
  * @throws {Error} If the update fails
  */
 export async function updateHistorySavedStatus(historyId, isSaved) {
-  const docRef = doc(db, HISTORY_COLLECTION, historyId);
-  await updateDoc(docRef, { isSavedToLogs: isSaved });
+  try {
+    const docRef = doc(db, HISTORY_COLLECTION, historyId);
+    await updateDoc(docRef, { isSavedToLogs: isSaved });
+  } catch (error) {
+    console.error('Error updating history status:', error);
+    throw error;
+  }
 }
 
 /**
@@ -57,21 +67,26 @@ export async function updateHistorySavedStatus(historyId, isSaved) {
 export async function getUserHistory(userId) {
   if (!userId) return [];
 
-  const q = query(
-    collection(db, HISTORY_COLLECTION),
-    where('userId', '==', userId)
-  );
+  try {
+    const q = query(
+      collection(db, HISTORY_COLLECTION),
+      where('userId', '==', userId)
+    );
 
-  const querySnapshot = await getDocs(q);
-  const historyRecords = querySnapshot.docs.map(docSnapshot => ({
-    id: docSnapshot.id,
-    ...docSnapshot.data(),
-    createdAt: docSnapshot.data().createdAt?.toDate() || new Date(),
-    expireAt: docSnapshot.data().expireAt?.toDate() || new Date()
-  }));
+    const querySnapshot = await getDocs(q);
+    const historyRecords = querySnapshot.docs.map(docSnapshot => ({
+      id: docSnapshot.id,
+      ...docSnapshot.data(),
+      createdAt: docSnapshot.data().createdAt?.toDate() || new Date(),
+      expireAt: docSnapshot.data().expireAt?.toDate() || new Date()
+    }));
 
-  // Sort client-side to avoid needing a Firestore composite index
-  return historyRecords.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Sort client-side to avoid needing a Firestore composite index
+    return historyRecords.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  } catch (error) {
+    console.error('Error fetching user history:', error);
+    throw error;
+  }
 }
 
 /**
@@ -82,9 +97,14 @@ export async function getUserHistory(userId) {
  * @throws {Error} If the deletion fails
  */
 export async function deleteHistoryItem(historyId) {
-  const { deleteDoc } = await import('firebase/firestore');
-  const docRef = doc(db, HISTORY_COLLECTION, historyId);
-  await deleteDoc(docRef);
+  try {
+    const { deleteDoc } = await import('firebase/firestore');
+    const docRef = doc(db, HISTORY_COLLECTION, historyId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error('Error deleting history item:', error);
+    throw error;
+  }
 }
 
 /**
@@ -96,14 +116,19 @@ export async function deleteHistoryItem(historyId) {
  */
 export async function clearUserHistory(userId) {
   if (!userId) return;
-  const { writeBatch } = await import('firebase/firestore');
-  const q = query(collection(db, HISTORY_COLLECTION), where('userId', '==', userId));
-  const snapshot = await getDocs(q);
+  try {
+    const { writeBatch } = await import('firebase/firestore');
+    const q = query(collection(db, HISTORY_COLLECTION), where('userId', '==', userId));
+    const snapshot = await getDocs(q);
 
-  const batch = writeBatch(db);
-  snapshot.docs.forEach((docSnapshot) => {
-    batch.delete(docSnapshot.ref);
-  });
+    const batch = writeBatch(db);
+    snapshot.docs.forEach((docSnapshot) => {
+      batch.delete(docSnapshot.ref);
+    });
 
-  await batch.commit();
+    await batch.commit();
+  } catch (error) {
+    console.error('Error clearing user history:', error);
+    throw error;
+  }
 }

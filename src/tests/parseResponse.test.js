@@ -55,4 +55,16 @@ describe('parseApiResponse', () => {
       parseApiResponse({ candidates: [{ content: { parts: [] } }] }),
     ).toThrow('Malformed API response');
   });
+
+  it('throws on malformed response with missing text field', () => {
+    expect(() => 
+      parseApiResponse({ candidates: [{ content: { parts: [{ notText: 'here' }] } }] })
+    ).toThrow('Malformed API response');
+  });
+
+  it('handles response with multiple blank lines by collapsing them', () => {
+    const raw = buildMockResponse('Line one\n\n\nLine two');
+    const parsedResult = parseApiResponse(raw);
+    expect(parsedResult.message).toBe('Line one\n\nLine two');
+  });
 });

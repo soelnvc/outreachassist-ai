@@ -1,5 +1,3 @@
-import { sanitizeInput } from '../utils/validators.js';
-
 const MIN_PROSPECT_LENGTH = 20;
 
 const BANNED_PHRASES = [
@@ -86,9 +84,9 @@ export function buildPersonalizerPrompt(prospectData, userProfile) {
     throw new Error('prospectInfo is required and must be at least 20 characters.');
   }
 
-  const sanitizedInfo = sanitizeInput(prospectData.prospectInfo);
-  const sanitizedIntent = prospectData.intent ? sanitizeInput(prospectData.intent) : '';
-  const sanitizedName = prospectData.name ? sanitizeInput(prospectData.name) : '';
+  const sanitizedInfo = prospectData.prospectInfo;
+  const sanitizedIntent = prospectData.intent || '';
+  const sanitizedName = prospectData.name || '';
 
   const nameBlock = sanitizedName ? `\nProspect Name & Title: ${sanitizedName}\n` : '';
   const intentBlock = sanitizedIntent

@@ -12,13 +12,18 @@ const USERS_COLLECTION = 'users';
 export async function getUserProfile(userId) {
   if (!userId) return null;
 
-  const docRef = doc(db, USERS_COLLECTION, userId);
-  const docSnap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, USERS_COLLECTION, userId);
+    const docSnap = await getDoc(docRef);
 
-  if (docSnap.exists()) {
-    return docSnap.data();
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
   }
-  return null;
 }
 
 /**
@@ -32,7 +37,12 @@ export async function getUserProfile(userId) {
 export async function saveUserProfile(userId, profileData) {
   if (!userId) throw new Error('User ID is required to save profile');
 
-  const docRef = doc(db, USERS_COLLECTION, userId);
-  // Use merge: true to only update the provided fields
-  await setDoc(docRef, { ...profileData, updatedAt: new Date() }, { merge: true });
+  try {
+    const docRef = doc(db, USERS_COLLECTION, userId);
+    // Use merge: true to only update the provided fields
+    await setDoc(docRef, { ...profileData, updatedAt: new Date() }, { merge: true });
+  } catch (error) {
+    console.error('Error saving user profile:', error);
+    throw error;
+  }
 }

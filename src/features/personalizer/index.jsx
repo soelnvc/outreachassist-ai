@@ -4,7 +4,7 @@ import { InputForm } from '../../components/InputForm.jsx';
 import { OutputCard } from '../../components/OutputCard.jsx';
 import { ErrorMessage } from '../../components/ErrorMessage.jsx';
 import { LoadingSpinner } from '../../components/LoadingSpinner.jsx';
-import { validateProspectInput } from '../../utils/validators.js';
+import { validateProspectInput, sanitizeInput } from '../../utils/validators.js';
 import { buildPersonalizerPrompt } from '../../prompts/index.js';
 import { callGemini } from '../../services/gemini.js';
 import { parseApiResponse } from '../../utils/parseResponse.js';
@@ -77,7 +77,7 @@ export function PersonalizerPage() {
   const handleSave = useCallback(() => {
     if (!generationResult?.message) return;
     setSheetStatus('saving');
-    appendToSheet({ ...formData, message: generationResult.message }, userProfile?.sheetsUrl)
+    appendToSheet({ ...formData, message: generationResult.message })
       .then(async () => {
         setSheetStatus('saved');
         if (currentHistoryId) {
@@ -110,7 +110,14 @@ export function PersonalizerPage() {
     setIsLoading(true);
 
     try {
-      const prompt = buildPersonalizerPrompt(formData, userProfile);
+      const sanitizedData = {
+        ...formData,
+        prospectInfo: sanitizeInput(formData.prospectInfo),
+        intent: formData.intent ? sanitizeInput(formData.intent) : '',
+        name: formData.name ? sanitizeInput(formData.name) : ''
+      };
+
+      const prompt = buildPersonalizerPrompt(sanitizedData, userProfile);
       const rawResponse = await callGemini(prompt, abortControllerRef.current.signal);
       const parsed = parseApiResponse(rawResponse);
       setGenerationResult(parsed);
@@ -131,6 +138,10 @@ export function PersonalizerPage() {
       setIsLoading(false);
     }
   }, [formData, currentUser, userProfile]);
+
+  const finalSheetUrl = useMemo(() => 
+    userProfile?.viewUrl || userProfile?.sheetsUrl || sheetUrl,
+  [userProfile, sheetUrl]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
@@ -182,21 +193,23 @@ export function PersonalizerPage() {
             <LoadingSpinner message="Crafting your personalised message..." />
           )}
 
-          {generationResult && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8"
-            >
-              <OutputCard
-                message={generationResult.message}
-                onCopy={handleCopy}
-                onSave={handleSave}
-                sheetStatus={sheetStatus}
-                sheetUrl={userProfile?.viewUrl || userProfile?.sheetsUrl || sheetUrl}
-              />
-            </motion.div>
-          )}
+          <div aria-live="polite" aria-atomic="true">
+            {generationResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8"
+              >
+                <OutputCard
+                  message={generationResult.message}
+                  onCopy={handleCopy}
+                  onSave={handleSave}
+                  sheetStatus={sheetStatus}
+                  sheetUrl={finalSheetUrl}
+                />
+              </motion.div>
+            )}
+          </div>
 
           <AIDisclaimer />
         </motion.div>

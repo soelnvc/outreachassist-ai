@@ -91,7 +91,7 @@ export function HistoryPage() {
         prospectName: historyItem.formData.name,
         message: historyItem.generatedMessage,
         ...historyItem.formData
-      }, userProfile?.sheetsUrl);
+      });
 
       await updateHistorySavedStatus(historyItem.id, true);
 

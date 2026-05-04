@@ -11,6 +11,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.env
+.env.local
+.env.*.local
 *.local
 
 # Editor directories and files
@@ -26,3 +29,7 @@ dist-ssr
 
 Plan.md
 Instructions.md
+Security.md
+Efficiency.md
+Test.md
+Access.md

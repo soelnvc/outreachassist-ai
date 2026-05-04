@@ -181,4 +181,14 @@ describe('buildPersonalizerPrompt', () => {
     expect(generatedPrompt).toContain('Prospect Name: Sarah Chen');
     expect(generatedPrompt).toContain('address them by their first name');
   });
+  
+  it('throws when prospectInfo is exactly 19 characters', () => {
+    expect(() => buildPersonalizerPrompt({ prospectInfo: 'x'.repeat(19) })).toThrow();
+  });
+
+  it('handles special characters in prospectInfo', () => {
+    const infoWithSpecials = "Sarah's company \"Acme\" `Tech`";
+    const generatedPrompt = buildPersonalizerPrompt({ prospectInfo: infoWithSpecials });
+    expect(generatedPrompt).toContain(infoWithSpecials);
+  });
 });

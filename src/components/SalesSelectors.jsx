@@ -29,11 +29,11 @@ export function ChipGroup({ label, name, options, selected, onChange, optional =
   const legendId = `${name}-label`;
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-center gap-4">
-      <div id={legendId} className="text-sm font-light font-subheading text-gray-800 text-center uppercase tracking-wider">
+    <fieldset className="w-full h-full flex flex-col justify-center items-center gap-4 border-none p-0 m-0">
+      <legend className="text-sm font-light font-subheading text-gray-800 text-center uppercase tracking-wider block w-full mb-4">
         {label}
-      </div>
-      <div role="group" aria-labelledby={legendId} className="flex flex-wrap justify-center gap-2">
+      </legend>
+      <div role="group" className="flex flex-wrap justify-center gap-2">
         {options.map((option) => (
           <motion.label
             key={option}
@@ -59,12 +59,14 @@ export function ChipGroup({ label, name, options, selected, onChange, optional =
                 fontWeight: selected === option ? 600 : 300,
               }}
               transition={{ duration: 0.5 }}
+              aria-hidden="true"
             >
               {option}
             </motion.span>
+            <span className="sr-only">{option}</span>
           </motion.label>
         ))}
       </div>
-    </div>
+    </fieldset>
   );
 }
