@@ -4,7 +4,5 @@ dist
 .gitignore
 .vscode
 *.md
-Dockerfile
-nginx.conf
 package-lock.json
 npm-debug.log
