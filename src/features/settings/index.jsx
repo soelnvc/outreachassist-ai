@@ -48,7 +48,7 @@ export function SettingsPage() {
   const [isShowingSignOutConfirm, setIsShowingSignOutConfirm] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   const [history, setHistory] = useState([]);
-  const sheetUrl = useMemo(() => getSheetUrl(), []);
+  const sheetUrl = useMemo(() => getSheetUrl(profile.sheetsUrl), [profile.sheetsUrl]);
 
   const [profile, setProfile] = useState({
     name: '',

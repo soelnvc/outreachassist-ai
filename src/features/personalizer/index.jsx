@@ -50,7 +50,7 @@ export function PersonalizerPage() {
   const [sheetStatus, setSheetStatus] = useState(null);
 
   const abortControllerRef = useRef(null);
-  const sheetUrl = useMemo(() => getSheetUrl(), []);
+  const sheetUrl = useMemo(() => getSheetUrl(userProfile?.sheetsUrl), [userProfile?.sheetsUrl]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -77,7 +77,7 @@ export function PersonalizerPage() {
   const handleSave = useCallback(() => {
     if (!generationResult?.message) return;
     setSheetStatus('saving');
-    appendToSheet({ ...formData, message: generationResult.message })
+    appendToSheet({ ...formData, message: generationResult.message }, userProfile?.sheetsUrl)
       .then(async () => {
         setSheetStatus('saved');
         if (currentHistoryId) {
@@ -139,9 +139,7 @@ export function PersonalizerPage() {
     }
   }, [formData, currentUser, userProfile]);
 
-  const finalSheetUrl = useMemo(() => 
-    userProfile?.viewUrl || userProfile?.sheetsUrl || sheetUrl,
-  [userProfile, sheetUrl]);
+
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#EAE6F5] via-[#F4F0FB] to-[#FCEEF9] font-sans text-gray-900">
@@ -205,7 +203,7 @@ export function PersonalizerPage() {
                   onCopy={handleCopy}
                   onSave={handleSave}
                   sheetStatus={sheetStatus}
-                  sheetUrl={finalSheetUrl}
+                  sheetUrl={sheetUrl}
                 />
               </motion.div>
             )}

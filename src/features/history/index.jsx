@@ -49,7 +49,7 @@ export function HistoryPage() {
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [isShowingSignOutConfirm, setIsShowingSignOutConfirm] = useState(false);
-  const sheetUrl = useMemo(() => getSheetUrl(), []);
+  const sheetUrl = useMemo(() => getSheetUrl(userProfile?.sheetsUrl), [userProfile?.sheetsUrl]);
 
   useEffect(() => {
     async function fetchData() {
@@ -91,7 +91,7 @@ export function HistoryPage() {
         prospectName: historyItem.formData.name,
         message: historyItem.generatedMessage,
         ...historyItem.formData
-      });
+      }, userProfile?.sheetsUrl);
 
       await updateHistorySavedStatus(historyItem.id, true);
 
@@ -242,7 +242,7 @@ export function HistoryPage() {
                   onDeleteCancel={() => setDeletingId(null)}
                   onDeleteConfirm={handleDeleteItem}
                   onSave={handleSaveToLogs}
-                  viewLogUrl={userProfile?.viewUrl || sheetUrl}
+                  viewLogUrl={sheetUrl}
                 />
               ))}
             </div>

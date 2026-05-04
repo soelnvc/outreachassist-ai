@@ -3,26 +3,25 @@ const API_KEY = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
 const PROSPECT_SNIPPET_MAX_LENGTH = 100;
 
 /**
- * Appends one row of generated message data directly to a Google Sheet
- * via the Google Sheets API v4.
- * Non-blocking — call with .catch() to avoid breaking main flow.
+ * Appends one row of generated message data directly to a Google Sheet.
+ * If customId is provided, it saves to that specific sheet.
  *
  * @param {Object} rowData - The data to log
+ * @param {string} [customId] - Optional personal sheet ID
  * @returns {Promise<boolean>} Resolves to true on success
- * @throws {Error} If the API key or Sheet ID is missing or the request fails
  */
-export async function appendToSheet(rowData) {
-  // RULE Q3 — API key guard at top of function
-  if (!import.meta.env.VITE_GOOGLE_SHEETS_API_KEY) {
-    throw new Error('Google Sheets API key is not configured. Add VITE_GOOGLE_SHEETS_API_KEY to .env');
+export async function appendToSheet(rowData, customId) {
+  const finalSheetId = customId || SHEET_ID;
+
+  if (!API_KEY) {
+    throw new Error('Google Sheets API key is not configured.');
   }
-  if (!import.meta.env.VITE_SHEET_ID) {
-    throw new Error('Sheet ID is not configured. Add VITE_SHEET_ID to .env');
+  if (!finalSheetId) {
+    throw new Error('Sheet ID is not configured.');
   }
 
-  // RULE Q1 — Correct API endpoint
-  const range = 'Sheet1!A:I'; // Default range, assuming Sheet1
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?valueInputOption=RAW&key=${API_KEY}`;
+  const range = 'Sheet1!A:I';
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${finalSheetId}/values/${range}:append?valueInputOption=RAW&key=${API_KEY}`;
 
   // RULE Q2 — Row data shape is correct and complete
   // Order: Timestamp | Gender (null) | Age Range (null) | Country (null) | Profession (null) | Marital Status (null) | Humour | Prospect Snippet | Generated Message
@@ -71,12 +70,14 @@ export async function appendToSheet(rowData) {
 
 /**
  * Returns the public URL to view the Google Sheet.
- * RULE Q5 — getSheetUrl returns a real URL
+ * If a customId is provided (from user profile), it uses that.
+ * Otherwise, falls back to the global VITE_SHEET_ID.
  *
+ * @param {string} [customId] - Optional personal sheet ID
  * @returns {string} The Google Sheet URL
  */
-export function getSheetUrl() {
-  const id = import.meta.env.VITE_SHEET_ID;
+export function getSheetUrl(customId) {
+  const id = customId || import.meta.env.VITE_SHEET_ID;
   if (!id || id === 'undefined' || id.trim() === '') {
     return '#';
   }
