@@ -32,7 +32,7 @@ export function IntegrationSection({
           <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">1. Spreadsheet Link (To View Data)</label>
           <input
             type="text"
-            value={profile.viewUrl}
+            value={profile.viewUrl || ''}
             onChange={(e) => onFieldChange('viewUrl', e.target.value)}
             placeholder="https://docs.google.com/spreadsheets/d/..."
             className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"
@@ -42,12 +42,12 @@ export function IntegrationSection({
           </p>
         </div>
 
-        {/* Part 2: Apps Script URL */}
+        {/* Part 2: Apps Script Bridge */}
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">2. Apps Script URL (To Save Data)</label>
+          <label className="text-[10px] font-medium font-subheading text-[#2D1B69] uppercase tracking-widest pl-4">2. Apps Script Bridge (To Save Data)</label>
           <input
             type="text"
-            value={profile.sheetsUrl}
+            value={profile.sheetsUrl || ''}
             onChange={(e) => onFieldChange('sheetsUrl', e.target.value)}
             placeholder="https://script.google.com/macros/s/.../exec"
             className="w-full rounded-2xl px-6 py-3 font-light font-subheading text-gray-800 placeholder-gray-400 glass-input"

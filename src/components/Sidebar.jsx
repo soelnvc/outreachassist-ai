@@ -26,7 +26,7 @@ export function Sidebar({ userProfile, sheetUrl }) {
     { path: '/', label: 'Workspace', icon: FiLayout },
     { path: '/history', label: 'History', icon: FiClock },
     {
-      path: userProfile?.viewUrl || sheetUrl,
+      path: userProfile?.sheetsUrl || sheetUrl,
       label: 'Logs',
       icon: FiDatabase,
       isExternal: true,
@@ -41,7 +41,7 @@ export function Sidebar({ userProfile, sheetUrl }) {
   }, []);
 
   const proceedToLogs = useCallback(() => {
-    const url = userProfile?.viewUrl || sheetUrl;
+    const url = userProfile?.sheetsUrl || sheetUrl;
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
     setIsShowingLogConfirm(false);
   }, [userProfile, sheetUrl]);

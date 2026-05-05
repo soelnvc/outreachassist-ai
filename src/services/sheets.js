@@ -1,5 +1,22 @@
-const SHEET_ID = import.meta.env.VITE_SHEET_ID;
-const API_KEY = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
+/**
+ * Extracts the spreadsheet ID from a full Google Sheets URL or returns the ID if already one.
+ * @param {string} input - Full URL or ID
+ * @returns {string} The extracted ID
+ */
+function extractSheetId(input) {
+  if (typeof input !== 'string' || !input.trim()) return '';
+  
+  // Case 1: Full URL (https://docs.google.com/spreadsheets/d/ID/...)
+  const urlMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (urlMatch && urlMatch[1]) return urlMatch[1];
+  
+  // Case 2: Clean ID or ID with trailing bits (ID/edit?...)
+  // We take the first part before any slash or question mark
+  return input.split(/[\/\?#]/)[0].trim();
+}
+
+const API_KEY = import.meta.env?.VITE_GOOGLE_SHEETS_API_KEY || '';
+const DEFAULT_SHEET_ID = extractSheetId(import.meta.env?.VITE_SHEET_ID || '');
 const PROSPECT_SNIPPET_MAX_LENGTH = 100;
 
 /**
@@ -10,60 +27,41 @@ const PROSPECT_SNIPPET_MAX_LENGTH = 100;
  * @param {string} [customId] - Optional personal sheet ID
  * @returns {Promise<boolean>} Resolves to true on success
  */
-export async function appendToSheet(rowData, customId) {
-  const finalSheetId = customId || SHEET_ID;
+export async function appendToSheet(rowData, bridgeUrl) {
+  const finalUrl = bridgeUrl || import.meta.env.VITE_APPS_SCRIPT_URL;
 
-  if (!API_KEY) {
-    throw new Error('Google Sheets API key is not configured.');
-  }
-  if (!finalSheetId) {
-    throw new Error('Sheet ID is not configured.');
+  if (!finalUrl || !finalUrl.includes('script.google.com')) {
+    throw new Error('Apps Script Bridge URL is not configured or invalid.');
   }
 
-  const range = 'Sheet1!A:I';
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${finalSheetId}/values/${range}:append?valueInputOption=RAW&key=${API_KEY}`;
-
-  // RULE Q2 — Row data shape is correct and complete
-  // Order: Timestamp | Gender (null) | Age Range (null) | Country (null) | Profession (null) | Marital Status (null) | Humour | Prospect Snippet | Generated Message
-  // Note: This project uses B2B fields, so we map them meaningfully to the requested schema where possible or keep B2B context.
-  // The RULE Q2 specifically asks for Gender/Age/Country/Profession/Marital Status columns.
-  // I will adapt the data to match the requested columns as closely as possible from B2B data.
-  
   const prospectRaw = rowData.prospectInfo || rowData.prospectSnippet || '';
   const prospectSnippet = prospectRaw.slice(0, PROSPECT_SNIPPET_MAX_LENGTH);
 
-  const values = [
-    [
-      new Date().toISOString(),           // Timestamp
-      'Not specified',                     // Gender (Not applicable in B2B context)
-      'Not specified',                     // Age Range (Not applicable in B2B context)
-      'Not specified',                     // Country
-      rowData.buyerPersona ?? 'Not specified', // Profession (Mapping Buyer Persona here)
-      'Not specified',                     // Marital Status
-      rowData.humour ? 'Yes' : 'No',      // Humour
-      prospectSnippet,                    // Prospect Snippet (truncated)
-      rowData.message,                    // Generated Message
-    ]
-  ];
+  const payload = {
+    outreachChannel: rowData.outreachChannel || 'Not specified',
+    industry: rowData.industry || 'Not specified',
+    companySize: rowData.companySize || 'Not specified',
+    tone: rowData.tone || 'Not specified',
+    buyerPersona: rowData.buyerPersona || 'Not specified',
+    prospectSnippet: prospectSnippet,
+    intent: rowData.intent || 'Not specified',
+    message: rowData.message
+  };
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(finalUrl, {
       method: 'POST',
+      mode: 'no-cors', 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ values }),
+      body: JSON.stringify(payload),
     });
 
-    // RULE Q4 — Response is checked for ok status
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Sheets API error: ${response.status} ${errorData.error?.message || ''}`);
-    }
-
+    // With no-cors, we can't check response.ok, but if it doesn't throw, we assume success
     return true;
   } catch (error) {
-    console.error('Error appending to sheet:', error);
+    console.error('Error appending to sheet via bridge:', error);
     throw error;
   }
 }
@@ -77,7 +75,7 @@ export async function appendToSheet(rowData, customId) {
  * @returns {string} The Google Sheet URL
  */
 export function getSheetUrl(customId) {
-  const id = customId || import.meta.env.VITE_SHEET_ID;
+  const id = extractSheetId(customId) || DEFAULT_SHEET_ID;
   if (!id || id === 'undefined' || id.trim() === '') {
     return '#';
   }

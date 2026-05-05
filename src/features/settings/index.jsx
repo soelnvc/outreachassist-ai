@@ -53,8 +53,7 @@ export function SettingsPage() {
     about: '',
     company: '',
     work: '',
-    sheetsUrl: '',
-    viewUrl: ''
+    sheetsUrl: ''
   });
 
   const sheetUrl = useMemo(() => getSheetUrl(profile.sheetsUrl), [profile.sheetsUrl]);
