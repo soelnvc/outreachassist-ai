@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Live-success?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Status" />
-  <img src="https://img.shields.io/badge/Powered%20By-Gemini%201.5%20Pro-blueviolet?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/Powered%20By-Gemini%203.1%20Flash%20Lite-blueviolet?style=for-the-badge&logo=google-gemini&logoColor=white" alt="Gemini" />
   <img src="https://img.shields.io/badge/Framework-React%20+%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/Database-Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
 </p>
@@ -10,7 +10,7 @@
 ---
 
 ## 🎭 The Pitch
-**OutreachAI** is a premium, AI-driven B2B sales copilot designed to transform cold outreach into warm conversations. Built for modern sales teams, it leverages the power of **Google Gemini 1.5 Pro** to generate hyper-personalized, human-first messages that cut through the noise of crowded inboxes.
+**OutreachAI** is a premium, AI-driven B2B sales copilot designed to transform cold outreach into warm conversations. Built for modern sales teams, it leverages the power of **Google Gemini 3.1 Flash Lite** to generate hyper-personalized, human-first messages that cut through the noise of crowded inboxes.
 
 > "Don't just reach out. Stand out."
 
@@ -32,7 +32,7 @@
 | Component | Technology |
 | :--- | :--- |
 | **Frontend** | React 18, Vite, Framer Motion |
-| **Intelligence** | Google Gemini API (1.5 Pro) |
+| **Intelligence** | Google Gemini API (3.1 Flash Lite) |
 | **Backend/Auth** | Firebase Auth, Firestore |
 | **Integration** | Google Sheets API v4 + Apps Script |
 | **Styling** | Vanilla CSS (Custom Glassmorphism) |
